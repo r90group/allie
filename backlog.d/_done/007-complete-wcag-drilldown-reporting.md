@@ -1,6 +1,6 @@
 # Build complete WCAG obligation ledger and drilldown reporting
 
-Priority: P0 - Status: ready - Estimate: XL
+Priority: P0 - Status: done - Estimate: XL
 
 ## PRD Summary
 
@@ -97,3 +97,17 @@ W3C describes WCAG 2.2 as 13 guidelines under four principles, with testable
 success criteria at A, AA, and AAA levels. Allie should anchor reporting on those
 success criteria and use ACT-style transparent test methods for automated,
 semi-automated, and manual checks.
+
+## Delivered
+
+- Expanded `profiles/wcag22-aa.json` with the full WCAG 2.2 A/AA success
+  criterion ledger from W3C's machine-readable WCAG 2.2 JSON, excluding obsolete
+  `4.1.1`.
+- Tightened `schemas/allie.evidence.v0.schema.json` for typed run, policy,
+  coverage, findings, verdicts, and review attempts.
+- Report verdicts now show criterion titles, statuses, confidence, evidence
+  class, and source.
+- Coverage and verdict generation now include the full criterion denominator,
+  while preserving custom scripted and human review obligations.
+- Verified by `cargo test --locked` criterion-count assertions and
+  `npm run autonomous:smoke` report/packet checks.

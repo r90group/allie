@@ -1,6 +1,6 @@
 # Make autonomous discovery a versioned, replay-gated contract
 
-Priority: P0 - Status: ready - Estimate: XL
+Priority: P0 - Status: done - Estimate: XL
 
 ## PRD Summary
 
@@ -103,3 +103,14 @@ Priority: P0 - Status: ready - Estimate: XL
 W3C WCAG-EM frames evaluation around scope, website/app exploration, sample
 selection, evaluation, and reporting. Allie should operationalize that shape
 without pretending discovery is equivalent to conformance.
+
+## Delivered
+
+- Added `allie discover` and `allie promote-flow`.
+- Added `allie.discovery.v0` and `allie.flow-plan.v0` packet generation.
+- Added the multi-page `examples/autonomous-workbench.yml` fixture and
+  `fixtures/workbench/` surface set.
+- Generated manifests now normalize fixture paths and mark promoted states as
+  `verified_flow`.
+- Verified by `npm run autonomous:smoke`, which emits discovery/flow-plan
+  packets, promotes a generated manifest, and replays it through `allie run`.

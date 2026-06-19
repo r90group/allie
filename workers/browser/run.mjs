@@ -64,12 +64,20 @@ async function runWorker(request) {
     fixtureServer = target.server;
 
     browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
+    const wantsVideo = request.states.some((state) => state.video);
+    const contextOptions = {
       viewport: request.browser.viewport,
       colorScheme: request.browser.color_scheme,
       reducedMotion: request.browser.reduced_motion,
       locale: request.browser.locale,
-    });
+    };
+    if (wantsVideo) {
+      contextOptions.recordVideo = {
+        dir: path.join(artifactsDir, 'videos'),
+        size: request.browser.viewport,
+      };
+    }
+    const context = await browser.newContext(contextOptions);
 
     const states = [];
     for (const state of request.states) {
@@ -103,6 +111,7 @@ async function runWorker(request) {
 
 async function inspectState(context, baseUrl, state, artifactsDir, zoom) {
   const page = await context.newPage();
+  const pageVideo = page.video();
   const consoleErrors = [];
   const networkErrors = [];
 
@@ -132,9 +141,36 @@ async function inspectState(context, baseUrl, state, artifactsDir, zoom) {
   }
 
   const title = await page.title();
+  const keyboardFocusOrder = state.keyboard ? await captureKeyboardFocusOrder(page) : [];
   const screenshotPath = state.screenshot ? path.join(artifactsDir, `${state.id}.png`) : null;
   if (screenshotPath) {
     await page.screenshot({ path: screenshotPath, fullPage: true });
+  }
+
+  const domSnapshotPath = state.dom_snapshot ? path.join(artifactsDir, `dom-${state.id}.html`) : null;
+  if (domSnapshotPath) {
+    await fs.writeFile(domSnapshotPath, `${await page.content()}\n`);
+  }
+
+  let accessibilityTreePath = null;
+  if (state.accessibility_tree) {
+    accessibilityTreePath = path.join(artifactsDir, `accessibility-tree-${state.id}.json`);
+    const tree = page.accessibility?.snapshot
+      ? await page.accessibility.snapshot({ interestingOnly: false })
+      : await page.evaluate(() => ({
+        role: 'document',
+        name: document.title,
+        headings: [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((element) => ({
+          level: Number(element.tagName.slice(1)),
+          text: element.textContent?.trim() ?? '',
+        })),
+        controls: [...document.querySelectorAll('a,button,input,select,textarea,[role]')].map((element) => ({
+          tag: element.tagName.toLowerCase(),
+          role: element.getAttribute('role') || null,
+          name: element.getAttribute('aria-label') || element.textContent?.trim() || element.getAttribute('name') || element.getAttribute('id') || '',
+        })),
+      }));
+    await fs.writeFile(accessibilityTreePath, `${JSON.stringify(tree, null, 2)}\n`);
   }
 
   let axeJsonPath = null;
@@ -153,7 +189,31 @@ async function inspectState(context, baseUrl, state, artifactsDir, zoom) {
     }));
   }
 
+  const tracePath = state.trace ? path.join(artifactsDir, `trace-${state.id}.json`) : null;
+  if (tracePath) {
+    await fs.writeFile(tracePath, `${JSON.stringify({
+      state: state.id,
+      route: state.path,
+      url: targetUrl,
+      title,
+      keyboard_focus_order: keyboardFocusOrder,
+      console_errors: consoleErrors,
+      network_errors: networkErrors,
+    }, null, 2)}\n`);
+  }
+
   await page.close();
+  let videoPath = null;
+  if (state.video && pageVideo) {
+    const candidateVideoPath = await pageVideo.path();
+    const stableVideoPath = path.join(artifactsDir, `video-${state.id}.webm`);
+    try {
+      await fs.copyFile(candidateVideoPath, stableVideoPath);
+      videoPath = stableVideoPath;
+    } catch {
+      videoPath = null;
+    }
+  }
 
   return {
     id: state.id,
@@ -163,11 +223,33 @@ async function inspectState(context, baseUrl, state, artifactsDir, zoom) {
     http_status: httpStatus,
     screenshot_path: screenshotPath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(screenshotPath))), screenshotPath) : null,
     axe_json_path: axeJsonPath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(axeJsonPath))), axeJsonPath) : null,
+    dom_snapshot_path: domSnapshotPath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(domSnapshotPath))), domSnapshotPath) : null,
+    accessibility_tree_path: accessibilityTreePath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(accessibilityTreePath))), accessibilityTreePath) : null,
+    video_path: videoPath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(videoPath))), videoPath) : null,
+    trace_path: tracePath ? path.relative(path.resolve(repoRoot, path.dirname(path.dirname(tracePath))), tracePath) : null,
+    keyboard_focus_order: keyboardFocusOrder,
     axe_violations: axeViolations,
     console_errors: consoleErrors,
     network_errors: networkErrors,
     state_errors: stateErrors,
   };
+}
+
+async function captureKeyboardFocusOrder(page) {
+  const seen = [];
+  for (let index = 0; index < 12; index += 1) {
+    await page.keyboard.press('Tab');
+    const descriptor = await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!element || element === document.body) return 'body';
+      const tag = element.tagName.toLowerCase();
+      const id = element.id ? `#${element.id}` : '';
+      const label = element.getAttribute('aria-label') || element.textContent || element.getAttribute('name') || '';
+      return `${tag}${id}:${label.trim().replace(/\s+/g, ' ').slice(0, 80)}`;
+    });
+    seen.push(descriptor);
+  }
+  return [...new Set(seen)];
 }
 
 async function resolveTarget(target) {
@@ -261,6 +343,7 @@ function errorResponse(message) {
     actual_base_url: null,
     states: [],
     errors: [message],
+    nondeterminism: [],
   };
 }
 

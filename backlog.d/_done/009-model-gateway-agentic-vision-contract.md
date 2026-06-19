@@ -1,6 +1,6 @@
 # Add model gateway and agentic vision review contract
 
-Priority: P1 - Status: pending - Estimate: XL
+Priority: P1 - Status: done - Estimate: XL
 
 ## PRD Summary
 
@@ -94,3 +94,16 @@ Priority: P1 - Status: pending - Estimate: XL
 The model gateway is a compliance boundary, not a convenience wrapper. It should
 be impossible to confuse an agentic observation with a release-blocking finding
 unless Allie has replay or human-attested proof.
+
+## Delivered
+
+- Added `allie review --packet <evidence.json> --out <dir>`.
+- Added offline-recorded model review attempts with prompt artifacts, response
+  artifacts, redaction receipt artifacts, provider/model metadata, confidence,
+  and `model_hypothesis` promotion state.
+- Agentic findings enrich reviewed packets but stay non-blocking in release
+  projection unless promoted by scripted or human-backed proof.
+- Live provider calls remain intentionally disabled; this delivery implements
+  the evidence-locked gateway contract and fixture review path first.
+- Verified by `cargo test --locked` neutral-release assertions and
+  `npm run autonomous:smoke`, which writes `.allie/reviews/autonomous-smoke/`.

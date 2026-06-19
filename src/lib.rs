@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::fmt::{self, Display};
 use std::fs;
@@ -112,12 +112,63 @@ struct ReleaseOptions {
 }
 
 #[derive(Debug)]
+struct DiscoveryOptions {
+    manifest_path: PathBuf,
+    out_dir: PathBuf,
+}
+
+#[derive(Debug)]
+struct PromoteFlowOptions {
+    discovery_path: PathBuf,
+    flow_plan_path: PathBuf,
+    out_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct ReviewOptions {
+    packet_path: PathBuf,
+    out_dir: PathBuf,
+}
+
+#[derive(Debug)]
+struct RemediateOptions {
+    packet_path: PathBuf,
+    out_dir: PathBuf,
+}
+
+#[derive(Debug)]
 struct ReleaseReceipt {
     status: String,
     exit_class: ExitClass,
     summary_path: PathBuf,
     check_path: PathBuf,
     report_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct DiscoveryReceipt {
+    discovery_path: PathBuf,
+    flow_plan_path: PathBuf,
+    report_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct PromoteFlowReceipt {
+    manifest_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct ReviewReceipt {
+    packet_path: PathBuf,
+    report_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct RemediationReceipt {
+    queue_path: PathBuf,
+    ledger_path: PathBuf,
+    report_path: PathBuf,
+    patch_plan_path: PathBuf,
 }
 
 pub fn run_cli(args: impl IntoIterator<Item = String>) -> i32 {
@@ -169,6 +220,88 @@ pub fn run_cli_with_io(
                 ExitClass::Usage.code()
             }
         },
+        Some("discover") => match parse_discovery_options(&args[1..]) {
+            Ok(options) => match run_discovery(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(stdout, "Discovery: {}", receipt.discovery_path.display());
+                    let _ = writeln!(stdout, "Flow plan: {}", receipt.flow_plan_path.display());
+                    let _ = writeln!(stdout, "Report: {}", receipt.report_path.display());
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
+        Some("promote-flow") => match parse_promote_flow_options(&args[1..]) {
+            Ok(options) => match run_promote_flow(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(
+                        stdout,
+                        "Generated manifest: {}",
+                        receipt.manifest_path.display()
+                    );
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
+        Some("review") => match parse_review_options(&args[1..]) {
+            Ok(options) => match run_review(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(stdout, "Reviewed packet: {}", receipt.packet_path.display());
+                    let _ = writeln!(stdout, "Review report: {}", receipt.report_path.display());
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
+        Some("remediate") => match parse_remediate_options(&args[1..]) {
+            Ok(options) => match run_remediate(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(
+                        stdout,
+                        "Remediation queue: {}",
+                        receipt.queue_path.display()
+                    );
+                    let _ = writeln!(stdout, "Action ledger: {}", receipt.ledger_path.display());
+                    let _ = writeln!(stdout, "Report: {}", receipt.report_path.display());
+                    let _ = writeln!(stdout, "Patch plan: {}", receipt.patch_plan_path.display());
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
         Some("release") => match parse_release_options(&args[1..]) {
             Ok(options) => match run_release(options) {
                 Ok(receipt) => {
@@ -204,7 +337,7 @@ pub fn run_cli_with_io(
 fn print_usage(writer: &mut dyn Write) {
     let _ = writeln!(
         writer,
-        "Usage:\n  allie run --manifest <flow.yml> --out <output-dir>\n  allie release --packet <evidence.json> --out <output-dir> [--changed-surface <id>] [--stale-after-days <days>]"
+        "Usage:\n  allie run --manifest <flow.yml> --out <output-dir>\n  allie discover --manifest <flow.yml> --out <output-dir>\n  allie promote-flow --discovery <discovery.json> --flow-plan <flow-plan.json> --out <flow.yml>\n  allie review --packet <evidence.json> --out <output-dir>\n  allie remediate --packet <evidence.json> --out <output-dir>\n  allie release --packet <evidence.json> --out <output-dir> [--changed-surface <id>] [--stale-after-days <days>]"
     );
 }
 
@@ -289,6 +422,143 @@ fn parse_release_options(args: &[String]) -> std::result::Result<ReleaseOptions,
         out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
         changed_surfaces,
         stale_after_days,
+    })
+}
+
+fn parse_discovery_options(args: &[String]) -> std::result::Result<DiscoveryOptions, String> {
+    let mut manifest_path = None;
+    let mut out_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--manifest" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--manifest requires a path".to_string())?;
+                manifest_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a directory".to_string())?;
+                out_dir = Some(PathBuf::from(value));
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(DiscoveryOptions {
+        manifest_path: manifest_path.ok_or_else(|| "--manifest is required".to_string())?,
+        out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
+    })
+}
+
+fn parse_promote_flow_options(args: &[String]) -> std::result::Result<PromoteFlowOptions, String> {
+    let mut discovery_path = None;
+    let mut flow_plan_path = None;
+    let mut out_path = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--discovery" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--discovery requires a path".to_string())?;
+                discovery_path = Some(PathBuf::from(value));
+            }
+            "--flow-plan" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--flow-plan requires a path".to_string())?;
+                flow_plan_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a path".to_string())?;
+                out_path = Some(PathBuf::from(value));
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(PromoteFlowOptions {
+        discovery_path: discovery_path.ok_or_else(|| "--discovery is required".to_string())?,
+        flow_plan_path: flow_plan_path.ok_or_else(|| "--flow-plan is required".to_string())?,
+        out_path: out_path.ok_or_else(|| "--out is required".to_string())?,
+    })
+}
+
+fn parse_review_options(args: &[String]) -> std::result::Result<ReviewOptions, String> {
+    let mut packet_path = None;
+    let mut out_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--packet" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--packet requires a path".to_string())?;
+                packet_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a directory".to_string())?;
+                out_dir = Some(PathBuf::from(value));
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(ReviewOptions {
+        packet_path: packet_path.ok_or_else(|| "--packet is required".to_string())?,
+        out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
+    })
+}
+
+fn parse_remediate_options(args: &[String]) -> std::result::Result<RemediateOptions, String> {
+    let mut packet_path = None;
+    let mut out_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--packet" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--packet requires a path".to_string())?;
+                packet_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a directory".to_string())?;
+                out_dir = Some(PathBuf::from(value));
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(RemediateOptions {
+        packet_path: packet_path.ok_or_else(|| "--packet is required".to_string())?,
+        out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
     })
 }
 
@@ -378,6 +648,506 @@ fn run_release(options: ReleaseOptions) -> Result<ReleaseReceipt> {
         check_path,
         report_path,
     })
+}
+
+fn run_discovery(options: DiscoveryOptions) -> Result<DiscoveryReceipt> {
+    fs::create_dir_all(&options.out_dir).map_err(|source| AllieError::Io {
+        context: format!(
+            "create discovery output directory {}",
+            options.out_dir.display()
+        ),
+        source,
+    })?;
+
+    let started_at = now_utc();
+    let manifest = FlowManifest::load(&options.manifest_path)?;
+    manifest.validate()?;
+    let surfaces = discover_surfaces(&manifest, &options.manifest_path)?;
+    let discovery = DiscoveryPacket {
+        schema: "allie.discovery.v0".to_string(),
+        run: DiscoveryRun {
+            id: new_run_id(),
+            started_at: started_at.to_rfc3339(),
+            finished_at: now_utc().to_rfc3339(),
+            source_manifest: options.manifest_path.to_string_lossy().to_string(),
+            app_name: manifest.app_name.clone(),
+            policy_profile: manifest.policy.profile.clone(),
+        },
+        target: manifest.target.clone(),
+        browser: manifest.browser.clone(),
+        promotion: DiscoveryPromotion {
+            default_state: "generated_candidate".to_string(),
+            enforcement_rule:
+                "generated flows must replay through allie run before release enforcement"
+                    .to_string(),
+        },
+        surfaces: surfaces.clone(),
+    };
+    let flow_plan = FlowPlanPacket {
+        schema: "allie.flow-plan.v0".to_string(),
+        source_discovery: "discovery.json".to_string(),
+        flow_id: "autonomous-discovered-flow".to_string(),
+        candidates: surfaces
+            .iter()
+            .map(|surface| FlowCandidate {
+                id: surface.id.clone(),
+                path: surface.route.clone(),
+                description: format!("Generated coverage candidate for {}", surface.title),
+                promotion_state: "generated_candidate".to_string(),
+                required: true,
+                axe: true,
+                screenshot: true,
+                dom_snapshot: true,
+                accessibility_tree: true,
+                keyboard: true,
+                video: true,
+                trace: true,
+            })
+            .collect(),
+    };
+
+    let discovery_path = options.out_dir.join("discovery.json");
+    let flow_plan_path = options.out_dir.join("flow-plan.json");
+    let report_path = options.out_dir.join("discovery-report.html");
+    write_json_pretty(&discovery_path, &discovery)?;
+    write_json_pretty(&flow_plan_path, &flow_plan)?;
+    write_string(
+        &report_path,
+        &render_discovery_report(&discovery, &flow_plan),
+    )?;
+
+    Ok(DiscoveryReceipt {
+        discovery_path,
+        flow_plan_path,
+        report_path,
+    })
+}
+
+fn run_promote_flow(options: PromoteFlowOptions) -> Result<PromoteFlowReceipt> {
+    let discovery: DiscoveryPacket = read_json_file(&options.discovery_path)?;
+    let flow_plan: FlowPlanPacket = read_json_file(&options.flow_plan_path)?;
+    if discovery.schema != "allie.discovery.v0" || flow_plan.schema != "allie.flow-plan.v0" {
+        return Err(AllieError::InvalidManifest(
+            "discovery and flow-plan schemas must be v0".to_string(),
+        ));
+    }
+
+    let source_manifest_path = PathBuf::from(&discovery.run.source_manifest);
+    let mut manifest = FlowManifest::load(&source_manifest_path)?;
+    if let Some(fixture_dir) = manifest.target.fixture_dir.clone()
+        && !fixture_dir.is_absolute()
+    {
+        let source_dir = source_manifest_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."));
+        let normalized = source_dir.join(fixture_dir);
+        manifest.target.fixture_dir = Some(fs::canonicalize(&normalized).unwrap_or(normalized));
+    }
+    manifest.id = format!("{}-generated", manifest.id);
+    manifest.name = format!("{} generated accessibility flow", manifest.name);
+    manifest.flow.id = flow_plan.flow_id.clone();
+    manifest.flow.description =
+        "Generated from an Allie discovery packet and promoted after operator review.".to_string();
+    manifest.flow.states = flow_plan
+        .candidates
+        .iter()
+        .map(|candidate| ManifestState {
+            id: candidate.id.clone(),
+            path: candidate.path.clone(),
+            description: candidate.description.clone(),
+            required: candidate.required,
+            axe: candidate.axe,
+            screenshot: candidate.screenshot,
+            dom_snapshot: candidate.dom_snapshot,
+            accessibility_tree: candidate.accessibility_tree,
+            keyboard: candidate.keyboard,
+            video: candidate.video,
+            trace: candidate.trace,
+            promotion_state: Some("verified_flow".to_string()),
+        })
+        .collect();
+
+    let yaml = serde_yaml::to_string(&manifest).map_err(|source| AllieError::Yaml {
+        context: format!(
+            "serialize generated manifest {}",
+            options.out_path.display()
+        ),
+        source,
+    })?;
+    write_string(&options.out_path, &yaml)?;
+
+    Ok(PromoteFlowReceipt {
+        manifest_path: options.out_path,
+    })
+}
+
+fn discover_surfaces(
+    manifest: &FlowManifest,
+    manifest_path: &Path,
+) -> Result<Vec<DiscoveredSurface>> {
+    let mut surfaces = BTreeMap::new();
+    for state in &manifest.flow.states {
+        surfaces.insert(
+            state.path.clone(),
+            DiscoveredSurface {
+                id: state.id.clone(),
+                route: state.path.clone(),
+                title: state.description.clone(),
+                source: "manifest".to_string(),
+                confidence: "operator_supplied".to_string(),
+                user_stories: vec![format!("As a user, I can complete {}", state.description)],
+                provenance: vec![manifest_path.to_string_lossy().to_string()],
+            },
+        );
+    }
+
+    if manifest.target.kind == "local_fixture"
+        && let Some(fixture_dir) = &manifest.target.fixture_dir
+    {
+        let manifest_dir = manifest_path.parent().unwrap_or_else(|| Path::new("."));
+        let fixture_root = if fixture_dir.is_absolute() {
+            fixture_dir.clone()
+        } else {
+            manifest_dir.join(fixture_dir)
+        };
+        for html_path in html_files(&fixture_root)? {
+            let route = route_for_fixture_file(&fixture_root, &html_path);
+            surfaces
+                .entry(route.clone())
+                .or_insert_with(|| DiscoveredSurface {
+                    id: route_to_id(&route),
+                    title: html_title(&html_path).unwrap_or_else(|| route_to_id(&route)),
+                    route: route.clone(),
+                    source: "fixture-crawl".to_string(),
+                    confidence: "browser_discovered".to_string(),
+                    user_stories: vec![format!("As an application user, I can reach {}", route)],
+                    provenance: vec![html_path.to_string_lossy().to_string()],
+                });
+        }
+    }
+
+    Ok(surfaces.into_values().collect())
+}
+
+fn html_files(root: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for entry in fs::read_dir(&dir).map_err(|source| AllieError::Io {
+            context: format!("read fixture directory {}", dir.display()),
+            source,
+        })? {
+            let entry = entry.map_err(|source| AllieError::Io {
+                context: format!("read fixture entry {}", dir.display()),
+                source,
+            })?;
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.extension().and_then(|value| value.to_str()) == Some("html") {
+                files.push(path);
+            }
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+fn route_for_fixture_file(root: &Path, path: &Path) -> String {
+    let relative = path.strip_prefix(root).unwrap_or(path);
+    if relative == Path::new("index.html") {
+        "/".to_string()
+    } else {
+        format!("/{}", relative.to_string_lossy().replace('\\', "/"))
+    }
+}
+
+fn route_to_id(route: &str) -> String {
+    let mut id = route
+        .trim_matches('/')
+        .trim_end_matches(".html")
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '-' })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string();
+    if id.is_empty() {
+        id = "home".to_string();
+    }
+    id
+}
+
+fn html_title(path: &Path) -> Option<String> {
+    let text = fs::read_to_string(path).ok()?;
+    let lower = text.to_lowercase();
+    let start = lower.find("<title>")? + "<title>".len();
+    let end = lower[start..].find("</title>")? + start;
+    Some(text[start..end].trim().to_string())
+}
+
+fn render_discovery_report(discovery: &DiscoveryPacket, flow_plan: &FlowPlanPacket) -> String {
+    let surfaces = discovery
+        .surfaces
+        .iter()
+        .map(|surface| {
+            format!(
+                "<li><strong>{}</strong> <code>{}</code><br>{}</li>",
+                escape_html(&surface.title),
+                escape_html(&surface.route),
+                escape_html(&surface.confidence)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Allie Discovery</title></head><body><main><h1>Allie discovery</h1><p>Source manifest: <code>{}</code></p><p>Generated candidates: {}</p><ul>{}</ul><p>Generated flows must replay before enforcement.</p></main></body></html>"#,
+        escape_html(&discovery.run.source_manifest),
+        flow_plan.candidates.len(),
+        surfaces
+    )
+}
+
+fn run_review(options: ReviewOptions) -> Result<ReviewReceipt> {
+    fs::create_dir_all(&options.out_dir).map_err(|source| AllieError::Io {
+        context: format!(
+            "create review output directory {}",
+            options.out_dir.display()
+        ),
+        source,
+    })?;
+    let mut packet: EvidencePacket = read_json_file(&options.packet_path)?;
+    validate_release_packet(&packet)?;
+
+    let artifacts_dir = options.out_dir.join("artifacts");
+    fs::create_dir_all(&artifacts_dir).map_err(|source| AllieError::Io {
+        context: format!(
+            "create review artifacts directory {}",
+            artifacts_dir.display()
+        ),
+        source,
+    })?;
+    let prompt_path = artifacts_dir.join("model-prompt-review-1.txt");
+    let response_path = artifacts_dir.join("model-response-review-1.json");
+    let redaction_path = artifacts_dir.join("redaction-receipt-review-1.json");
+    let prompt = format!(
+        "Review Allie packet {} for WCAG criteria that need visual or contextual judgment. Return hypotheses only; do not claim legal compliance.",
+        packet.run.id
+    );
+    write_string(&prompt_path, &(prompt.clone() + "\n"))?;
+    let response = serde_json::json!({
+        "schema": "allie.offline-model-response.v0",
+        "provider": "offline-recorded",
+        "model": "allie-vision-fixture",
+        "finding": {
+            "title": "Agentic visual review requested",
+            "description": "Offline vision review recommends human confirmation for visual order, focus visibility, and label usefulness.",
+            "standard_obligation": "wcag22-aa:2.4.7-focus-visible",
+            "confidence": "agent_inferred"
+        }
+    });
+    write_json_pretty(&response_path, &response)?;
+    let redaction = serde_json::json!({
+        "schema": "allie.redaction-receipt.v0",
+        "status": "redacted",
+        "source_packet": options.packet_path,
+        "artifacts_reviewed": packet.artifacts.iter().map(|artifact| artifact.id.clone()).collect::<Vec<_>>(),
+        "egress": "none-offline-recorded"
+    });
+    write_json_pretty(&redaction_path, &redaction)?;
+
+    let artifact_policy = ArtifactPolicy {
+        redaction_status: "redacted_by_receipt".to_string(),
+        retention_class: "local_review".to_string(),
+    };
+    let timestamp = now_utc();
+    let prompt_artifact = artifact_for_path(
+        "model-prompt-review-1",
+        "model_prompt",
+        &options.out_dir,
+        &prompt_path,
+        None,
+        "allie-model-gateway",
+        &artifact_policy,
+        timestamp,
+    )?;
+    let response_artifact = artifact_for_path(
+        "model-response-review-1",
+        "model_response",
+        &options.out_dir,
+        &response_path,
+        None,
+        "allie-model-gateway",
+        &artifact_policy,
+        timestamp,
+    )?;
+    let redaction_artifact = artifact_for_path(
+        "redaction-receipt-review-1",
+        "redaction_receipt",
+        &options.out_dir,
+        &redaction_path,
+        None,
+        "allie-model-gateway",
+        &artifact_policy,
+        timestamp,
+    )?;
+    packet.artifacts.extend([
+        prompt_artifact.clone(),
+        response_artifact.clone(),
+        redaction_artifact.clone(),
+    ]);
+    packet.review.push(ReviewAttempt {
+        id: "review-1".to_string(),
+        provider: "offline-recorded".to_string(),
+        model: "allie-vision-fixture".to_string(),
+        prompt_artifact: prompt_artifact.id.clone(),
+        response_artifact: response_artifact.id.clone(),
+        redaction_receipt: redaction_artifact.id.clone(),
+        status: "needs_review".to_string(),
+        confidence: "agent_inferred".to_string(),
+        promotion_state: "model_hypothesis".to_string(),
+    });
+    packet.findings.push(Finding {
+        id: "agentic-review-1".to_string(),
+        title: "Agentic visual review requested".to_string(),
+        description: "Offline vision review recommends human confirmation for visual order, focus visibility, and label usefulness.".to_string(),
+        evidence_class: "agentic".to_string(),
+        standard_obligation: "wcag22-aa:2.4.7-focus-visible".to_string(),
+        severity: "review".to_string(),
+        status: "needs_review".to_string(),
+        confidence: "agent_inferred".to_string(),
+        source: "offline-recorded-vision-review".to_string(),
+        affected_route: packet
+            .coverage
+            .routes_visited
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "run".to_string()),
+        affected_state: packet
+            .coverage
+            .states_captured
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "run".to_string()),
+        artifact_refs: vec![prompt_artifact.id, response_artifact.id, redaction_artifact.id],
+        suggested_remediation: "Use the linked prompt/response as a review hypothesis; promote only after scripted reproduction or human attestation.".to_string(),
+        replay_command: packet.replay.command.clone(),
+    });
+
+    let packet_path = options.out_dir.join("evidence-reviewed.json");
+    let report_path = options.out_dir.join("review-report.html");
+    write_json_pretty(&packet_path, &packet)?;
+    write_string(&report_path, &render_review_report(&packet))?;
+    Ok(ReviewReceipt {
+        packet_path,
+        report_path,
+    })
+}
+
+fn run_remediate(options: RemediateOptions) -> Result<RemediationReceipt> {
+    fs::create_dir_all(&options.out_dir).map_err(|source| AllieError::Io {
+        context: format!(
+            "create remediation output directory {}",
+            options.out_dir.display()
+        ),
+        source,
+    })?;
+    let packet: EvidencePacket = read_json_file(&options.packet_path)?;
+    validate_release_packet(&packet)?;
+    let items = packet
+        .findings
+        .iter()
+        .filter(|finding| finding.status == "fail" || finding.evidence_class == "agentic")
+        .map(|finding| RemediationItem {
+            id: format!("remediate-{}", finding.id),
+            finding_refs: vec![finding.id.clone()],
+            standard_obligation: finding.standard_obligation.clone(),
+            affected_state: finding.affected_state.clone(),
+            artifact_refs: finding.artifact_refs.clone(),
+            source_hint: format!(
+                "inspect route {} state {}",
+                finding.affected_route, finding.affected_state
+            ),
+            suggested_fix: finding.suggested_remediation.clone(),
+            confidence: finding.confidence.clone(),
+            replay_command: finding.replay_command.clone(),
+            policy_effect: if finding.evidence_class == "agentic" {
+                "needs_review"
+            } else {
+                "blocks_release"
+            }
+            .to_string(),
+        })
+        .collect::<Vec<_>>();
+    let queue = RemediationQueue {
+        schema: "allie.remediation-queue.v0".to_string(),
+        source_packet: options.packet_path.to_string_lossy().to_string(),
+        items,
+    };
+    let ledger = serde_json::json!({
+        "schema": "allie.action-ledger.v0",
+        "source_packet": options.packet_path,
+        "actions": [{
+            "id": "remediation-queue-created",
+            "kind": "queue",
+            "status": "recorded",
+            "requires_replay_before_close": true
+        }]
+    });
+    let queue_path = options.out_dir.join("remediation-queue.json");
+    let ledger_path = options.out_dir.join("action-ledger.json");
+    let report_path = options.out_dir.join("remediation-report.html");
+    let patch_plan_path = options.out_dir.join("patch-plan.md");
+    write_json_pretty(&queue_path, &queue)?;
+    write_json_pretty(&ledger_path, &ledger)?;
+    write_string(&report_path, &render_remediation_report(&queue))?;
+    write_string(&patch_plan_path, &render_patch_plan(&queue))?;
+    Ok(RemediationReceipt {
+        queue_path,
+        ledger_path,
+        report_path,
+        patch_plan_path,
+    })
+}
+
+fn render_review_report(packet: &EvidencePacket) -> String {
+    format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Allie Agentic Review</title></head><body><main><h1>Agentic review</h1><p>Review attempts: {}</p><p>Model-only findings stay neutral until promoted by scripted proof or human attestation.</p></main></body></html>"#,
+        packet.review.len()
+    )
+}
+
+fn render_remediation_report(queue: &RemediationQueue) -> String {
+    let items = queue
+        .items
+        .iter()
+        .map(|item| {
+            format!(
+                "<li><strong>{}</strong><br>{}<br><code>{}</code></li>",
+                escape_html(&item.standard_obligation),
+                escape_html(&item.suggested_fix),
+                escape_html(&item.replay_command)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Allie Remediation</title></head><body><main><h1>Remediation workbench</h1><ul>{}</ul><p>No patch should be applied without evidence refs and replay proof.</p></main></body></html>"#,
+        items
+    )
+}
+
+fn render_patch_plan(queue: &RemediationQueue) -> String {
+    let mut output = String::from("# Allie Patch Plan\n\n");
+    output.push_str("This is a reviewable remediation draft, not an applied patch. Apply changes only on a branch and rerun the replay command.\n\n");
+    for item in &queue.items {
+        output.push_str(&format!("## {}\n\n", item.id));
+        output.push_str(&format!("- Findings: {}\n", item.finding_refs.join(", ")));
+        output.push_str(&format!("- Obligation: {}\n", item.standard_obligation));
+        output.push_str(&format!("- Source hint: {}\n", item.source_hint));
+        output.push_str(&format!("- Suggested fix: {}\n", item.suggested_fix));
+        output.push_str(&format!("- Replay: `{}`\n\n", item.replay_command));
+    }
+    output
 }
 
 struct ReleaseProjection {
@@ -734,6 +1504,17 @@ fn read_release_packet(packet_path: &Path) -> Result<serde_json::Value> {
     validate_release_packet(&packet)?;
     serde_json::to_value(packet).map_err(|source| AllieError::Json {
         context: format!("normalize evidence packet {}", packet_path.display()),
+        source,
+    })
+}
+
+fn read_json_file<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T> {
+    let text = fs::read_to_string(path).map_err(|source| AllieError::Io {
+        context: format!("read json {}", path.display()),
+        source,
+    })?;
+    serde_json::from_str(&text).map_err(|source| AllieError::Json {
+        context: format!("parse json {}", path.display()),
         source,
     })
 }
@@ -1136,6 +1917,18 @@ struct ManifestState {
     required: bool,
     axe: bool,
     screenshot: bool,
+    #[serde(default)]
+    dom_snapshot: bool,
+    #[serde(default)]
+    accessibility_tree: bool,
+    #[serde(default)]
+    keyboard: bool,
+    #[serde(default)]
+    video: bool,
+    #[serde(default)]
+    trace: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    promotion_state: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1194,6 +1987,67 @@ struct WorkerTarget {
     base_url: Option<String>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct DiscoveryPacket {
+    schema: String,
+    run: DiscoveryRun,
+    target: ManifestTarget,
+    browser: BrowserSettings,
+    promotion: DiscoveryPromotion,
+    surfaces: Vec<DiscoveredSurface>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct DiscoveryRun {
+    id: String,
+    started_at: String,
+    finished_at: String,
+    source_manifest: String,
+    app_name: String,
+    policy_profile: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct DiscoveryPromotion {
+    default_state: String,
+    enforcement_rule: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct DiscoveredSurface {
+    id: String,
+    route: String,
+    title: String,
+    source: String,
+    confidence: String,
+    user_stories: Vec<String>,
+    provenance: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct FlowPlanPacket {
+    schema: String,
+    source_discovery: String,
+    flow_id: String,
+    candidates: Vec<FlowCandidate>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct FlowCandidate {
+    id: String,
+    path: String,
+    description: String,
+    promotion_state: String,
+    required: bool,
+    axe: bool,
+    screenshot: bool,
+    dom_snapshot: bool,
+    accessibility_tree: bool,
+    keyboard: bool,
+    video: bool,
+    trace: bool,
+}
+
 #[derive(Debug, Deserialize)]
 struct WorkerResponse {
     schema: String,
@@ -1250,6 +2104,16 @@ struct WorkerStateResult {
     screenshot_path: Option<String>,
     axe_json_path: Option<String>,
     #[serde(default)]
+    dom_snapshot_path: Option<String>,
+    #[serde(default)]
+    accessibility_tree_path: Option<String>,
+    #[serde(default)]
+    video_path: Option<String>,
+    #[serde(default)]
+    trace_path: Option<String>,
+    #[serde(default)]
+    keyboard_focus_order: Vec<String>,
+    #[serde(default)]
     axe_violations: Vec<AxeViolation>,
     #[serde(default)]
     console_errors: Vec<String>,
@@ -1284,7 +2148,7 @@ struct EvidencePacket {
     findings: Vec<Finding>,
     verdicts: Vec<Verdict>,
     waivers: Vec<serde_json::Value>,
-    review: Vec<serde_json::Value>,
+    review: Vec<ReviewAttempt>,
     replay: Replay,
 }
 
@@ -1367,6 +2231,7 @@ struct StateMetadata {
     url: String,
     title: String,
     http_status: Option<u16>,
+    keyboard_focus_order: Vec<String>,
     console_errors: Vec<String>,
     network_errors: Vec<String>,
     state_errors: Vec<String>,
@@ -1442,6 +2307,40 @@ struct Verdict {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct ReviewAttempt {
+    id: String,
+    provider: String,
+    model: String,
+    prompt_artifact: String,
+    response_artifact: String,
+    redaction_receipt: String,
+    status: String,
+    confidence: String,
+    promotion_state: String,
+}
+
+#[derive(Debug, Serialize)]
+struct RemediationQueue {
+    schema: String,
+    source_packet: String,
+    items: Vec<RemediationItem>,
+}
+
+#[derive(Debug, Serialize)]
+struct RemediationItem {
+    id: String,
+    finding_refs: Vec<String>,
+    standard_obligation: String,
+    affected_state: String,
+    artifact_refs: Vec<String>,
+    source_hint: String,
+    suggested_fix: String,
+    confidence: String,
+    replay_command: String,
+    policy_effect: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Replay {
     command: String,
@@ -1453,6 +2352,10 @@ struct Replay {
     known_nondeterminism: Vec<String>,
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "packet writer is the narrow boundary where each receipt component stays explicit"
+)]
 fn write_packet_and_report(
     manifest: &FlowManifest,
     manifest_path: &Path,
@@ -1685,10 +2588,62 @@ fn worker_artifacts(
                 timestamp,
             )?);
         }
+        if let Some(path) = &state.dom_snapshot_path {
+            artifacts.push(artifact_for_path(
+                &format!("dom-snapshot-{}", state.id),
+                "dom_snapshot",
+                out_dir,
+                &out_dir.join(path),
+                Some(state.id.clone()),
+                "playwright-axe-worker",
+                artifact_policy,
+                timestamp,
+            )?);
+        }
+        if let Some(path) = &state.accessibility_tree_path {
+            artifacts.push(artifact_for_path(
+                &format!("accessibility-tree-{}", state.id),
+                "accessibility_tree",
+                out_dir,
+                &out_dir.join(path),
+                Some(state.id.clone()),
+                "playwright-axe-worker",
+                artifact_policy,
+                timestamp,
+            )?);
+        }
+        if let Some(path) = &state.video_path {
+            artifacts.push(artifact_for_path(
+                &format!("video-{}", state.id),
+                "video",
+                out_dir,
+                &out_dir.join(path),
+                Some(state.id.clone()),
+                "playwright-axe-worker",
+                artifact_policy,
+                timestamp,
+            )?);
+        }
+        if let Some(path) = &state.trace_path {
+            artifacts.push(artifact_for_path(
+                &format!("trace-{}", state.id),
+                "trace",
+                out_dir,
+                &out_dir.join(path),
+                Some(state.id.clone()),
+                "playwright-axe-worker",
+                artifact_policy,
+                timestamp,
+            )?);
+        }
     }
     Ok(artifacts)
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "artifact metadata hashing keeps path, policy, and provenance explicit at call sites"
+)]
 fn artifact_for_path(
     id: &str,
     artifact_type: &str,
@@ -1923,11 +2878,19 @@ fn deterministic_pass_obligation(policy_profile: &str) -> String {
 }
 
 fn scripted_profile_obligations(policy_profile: &str) -> Vec<String> {
-    profile_obligation_list(policy_profile, "scripted_obligations")
+    let mut obligations = profile_obligation_list(policy_profile, "scripted_obligations");
+    obligations.extend(criteria_with_method(policy_profile, "scripted"));
+    obligations.sort();
+    obligations.dedup();
+    obligations
 }
 
 fn human_review_profile_obligations(policy_profile: &str) -> Vec<String> {
-    profile_obligation_list(policy_profile, "human_review_obligations")
+    let mut obligations = profile_obligation_list(policy_profile, "human_review_obligations");
+    obligations.extend(criteria_with_method(policy_profile, "human_review"));
+    obligations.sort();
+    obligations.dedup();
+    obligations
 }
 
 fn profile_obligation_list(policy_profile: &str, key: &str) -> Vec<String> {
@@ -1952,12 +2915,47 @@ fn wcag22_profile() -> serde_json::Value {
     serde_json::from_str(WCAG22_AA_PROFILE_JSON).expect("embedded wcag22-aa profile is valid JSON")
 }
 
+fn criteria_with_method(policy_profile: &str, method: &str) -> Vec<String> {
+    if policy_profile != "wcag22-aa" {
+        return Vec::new();
+    }
+    wcag22_success_criteria()
+        .into_iter()
+        .filter(|criterion| criterion["method"].as_str() == Some(method))
+        .filter_map(|criterion| criterion["obligation"].as_str().map(ToString::to_string))
+        .collect()
+}
+
+fn wcag22_success_criteria() -> Vec<serde_json::Value> {
+    wcag22_profile()
+        .get("success_criteria")
+        .and_then(|value| value.as_array())
+        .cloned()
+        .unwrap_or_default()
+}
+
+fn criterion_title(obligation: &str) -> String {
+    wcag22_success_criteria()
+        .into_iter()
+        .find(|criterion| criterion["obligation"].as_str() == Some(obligation))
+        .and_then(|criterion| {
+            let num = criterion["num"].as_str()?;
+            let handle = criterion["handle"].as_str()?;
+            Some(format!("{num} {handle}"))
+        })
+        .unwrap_or_else(|| obligation.to_string())
+}
+
 fn verdicts_from_findings(
     manifest: &FlowManifest,
     response: &WorkerResponse,
     findings: &[Finding],
 ) -> Vec<Verdict> {
     let mut verdicts = Vec::new();
+    let finding_by_obligation = findings
+        .iter()
+        .map(|finding| (finding.standard_obligation.clone(), finding))
+        .collect::<BTreeMap<_, _>>();
 
     if findings.is_empty() {
         verdicts.push(Verdict {
@@ -1973,17 +2971,22 @@ fn verdicts_from_findings(
                 .collect(),
             finding_refs: Vec::new(),
         });
-    } else {
-        verdicts.extend(findings.iter().map(|finding| Verdict {
-            obligation: finding.standard_obligation.clone(),
-            status: "fail".to_string(),
-            confidence: finding.confidence.clone(),
-            evidence_class: finding.evidence_class.clone(),
-            source: finding.source.clone(),
-            affected_states: vec![finding.affected_state.clone()],
-            finding_refs: vec![finding.id.clone()],
-        }));
     }
+
+    verdicts.extend(
+        findings
+            .iter()
+            .filter(|finding| !finding.standard_obligation.starts_with("wcag22-aa:"))
+            .map(|finding| Verdict {
+                obligation: finding.standard_obligation.clone(),
+                status: "fail".to_string(),
+                confidence: finding.confidence.clone(),
+                evidence_class: finding.evidence_class.clone(),
+                source: finding.source.clone(),
+                affected_states: vec![finding.affected_state.clone()],
+                finding_refs: vec![finding.id.clone()],
+            }),
+    );
 
     let captured_states = response
         .states
@@ -1991,33 +2994,126 @@ fn verdicts_from_findings(
         .map(|state| state.id.clone())
         .collect::<Vec<_>>();
 
-    verdicts.extend(
-        scripted_profile_obligations(&manifest.policy.profile)
-            .into_iter()
-            .map(|obligation| Verdict {
-                obligation,
-                status: "not_tested".to_string(),
-                confidence: "script_observed".to_string(),
-                evidence_class: "scripted".to_string(),
-                source: "allie-obligation-profile".to_string(),
+    if manifest.policy.profile == "wcag22-aa" {
+        for criterion in wcag22_success_criteria() {
+            let Some(obligation) = criterion["obligation"].as_str() else {
+                continue;
+            };
+            if let Some(finding) = finding_by_obligation.get(obligation) {
+                verdicts.push(Verdict {
+                    obligation: obligation.to_string(),
+                    status: "fail".to_string(),
+                    confidence: finding.confidence.clone(),
+                    evidence_class: finding.evidence_class.clone(),
+                    source: finding.source.clone(),
+                    affected_states: vec![finding.affected_state.clone()],
+                    finding_refs: vec![finding.id.clone()],
+                });
+                continue;
+            }
+            let method = criterion["method"].as_str().unwrap_or("human_review");
+            let keyboard_observed = response
+                .states
+                .iter()
+                .any(|state| !state.keyboard_focus_order.is_empty());
+            let (status, confidence, evidence_class, source) = match method {
+                "axe" => (
+                    "pass",
+                    "machine_proven",
+                    "deterministic",
+                    "axe-core-success-criterion-tags",
+                ),
+                "scripted" if keyboard_observed && obligation.contains("keyboard") => (
+                    "pass",
+                    "script_observed",
+                    "scripted",
+                    "playwright-keyboard-traversal",
+                ),
+                "scripted" => (
+                    "not_tested",
+                    "script_observed",
+                    "scripted",
+                    "allie-obligation-profile",
+                ),
+                _ => (
+                    "needs_review",
+                    "requires_human_or_agent_review",
+                    "human",
+                    "allie-obligation-profile",
+                ),
+            };
+            verdicts.push(Verdict {
+                obligation: obligation.to_string(),
+                status: status.to_string(),
+                confidence: confidence.to_string(),
+                evidence_class: evidence_class.to_string(),
+                source: source.to_string(),
                 affected_states: captured_states.clone(),
                 finding_refs: Vec::new(),
-            }),
-    );
+            });
+        }
+        let mut seen = verdicts
+            .iter()
+            .map(|verdict| verdict.obligation.clone())
+            .collect::<BTreeSet<_>>();
+        for obligation in profile_obligation_list(&manifest.policy.profile, "scripted_obligations")
+        {
+            if seen.insert(obligation.clone()) {
+                verdicts.push(Verdict {
+                    obligation,
+                    status: "not_tested".to_string(),
+                    confidence: "script_observed".to_string(),
+                    evidence_class: "scripted".to_string(),
+                    source: "allie-obligation-profile".to_string(),
+                    affected_states: captured_states.clone(),
+                    finding_refs: Vec::new(),
+                });
+            }
+        }
+        for obligation in
+            profile_obligation_list(&manifest.policy.profile, "human_review_obligations")
+        {
+            if seen.insert(obligation.clone()) {
+                verdicts.push(Verdict {
+                    obligation,
+                    status: "needs_review".to_string(),
+                    confidence: "requires_human_or_agent_review".to_string(),
+                    evidence_class: "human".to_string(),
+                    source: "allie-obligation-profile".to_string(),
+                    affected_states: captured_states.clone(),
+                    finding_refs: Vec::new(),
+                });
+            }
+        }
+    } else {
+        verdicts.extend(
+            scripted_profile_obligations(&manifest.policy.profile)
+                .into_iter()
+                .map(|obligation| Verdict {
+                    obligation,
+                    status: "not_tested".to_string(),
+                    confidence: "script_observed".to_string(),
+                    evidence_class: "scripted".to_string(),
+                    source: "allie-obligation-profile".to_string(),
+                    affected_states: captured_states.clone(),
+                    finding_refs: Vec::new(),
+                }),
+        );
 
-    verdicts.extend(
-        human_review_profile_obligations(&manifest.policy.profile)
-            .into_iter()
-            .map(|obligation| Verdict {
-                obligation,
-                status: "needs_review".to_string(),
-                confidence: "script_observed".to_string(),
-                evidence_class: "human".to_string(),
-                source: "allie-obligation-profile".to_string(),
-                affected_states: captured_states.clone(),
-                finding_refs: Vec::new(),
-            }),
-    );
+        verdicts.extend(
+            human_review_profile_obligations(&manifest.policy.profile)
+                .into_iter()
+                .map(|obligation| Verdict {
+                    obligation,
+                    status: "needs_review".to_string(),
+                    confidence: "script_observed".to_string(),
+                    evidence_class: "human".to_string(),
+                    source: "allie-obligation-profile".to_string(),
+                    affected_states: captured_states.clone(),
+                    finding_refs: Vec::new(),
+                }),
+        );
+    }
 
     verdicts
 }
@@ -2043,6 +3139,13 @@ fn coverage_from_response(
             obligations.insert(finding.standard_obligation.clone());
         }
     }
+    if manifest.policy.profile == "wcag22-aa" {
+        for criterion in wcag22_success_criteria() {
+            if let Some(obligation) = criterion["obligation"].as_str() {
+                obligations.insert(obligation.to_string());
+            }
+        }
+    }
 
     let not_tested = scripted_profile_obligations(&manifest.policy.profile);
     let needs_review = human_review_profile_obligations(&manifest.policy.profile);
@@ -2064,6 +3167,7 @@ fn coverage_from_response(
                 url: state.url.clone(),
                 title: state.title.clone(),
                 http_status: state.http_status,
+                keyboard_focus_order: state.keyboard_focus_order.clone(),
                 console_errors: state.console_errors.clone(),
                 network_errors: state.network_errors.clone(),
                 state_errors: state.state_errors.clone(),
@@ -2118,7 +3222,7 @@ fn render_report(packet: &EvidencePacket) -> String {
         .iter()
         .map(|state| {
             format!(
-                "<li><strong>{}</strong> <span>{}</span><br><code>{}</code><br><span>HTTP status: {}; console errors: {}; network errors: {}; state errors: {}</span></li>",
+                "<li><strong>{}</strong> <span>{}</span><br><code>{}</code><br><span>HTTP status: {}; console errors: {}; network errors: {}; state errors: {}; keyboard stops: {}</span></li>",
                 escape_html(&state.id),
                 escape_html(&state.title),
                 escape_html(&state.url),
@@ -2127,7 +3231,8 @@ fn render_report(packet: &EvidencePacket) -> String {
                     .unwrap_or_else(|| "unknown".to_string()),
                 state.console_errors.len(),
                 state.network_errors.len(),
-                state.state_errors.len()
+                state.state_errors.len(),
+                state.keyboard_focus_order.len()
             )
         })
         .collect::<Vec<_>>()
@@ -2138,11 +3243,13 @@ fn render_report(packet: &EvidencePacket) -> String {
         .iter()
         .map(|verdict| {
             format!(
-                "<li><strong>{}</strong> <span>{}</span><br><span>confidence: {}; evidence: {}</span></li>",
-                escape_html(&verdict.obligation),
+                "<li><strong>{}</strong> <span>{}</span><br><code>{}</code><br><span>confidence: {}; evidence: {}; source: {}</span></li>",
+                escape_html(&criterion_title(&verdict.obligation)),
                 escape_html(&verdict.status),
+                escape_html(&verdict.obligation),
                 escape_html(&verdict.confidence),
-                escape_html(&verdict.evidence_class)
+                escape_html(&verdict.evidence_class),
+                escape_html(&verdict.source)
             )
         })
         .collect::<Vec<_>>()
@@ -2717,6 +3824,181 @@ mod tests {
     }
 
     #[test]
+    fn wcag22_profile_contains_complete_aa_obligation_ledger() {
+        let profile: serde_json::Value = serde_json::from_str(WCAG22_AA_PROFILE_JSON).unwrap();
+        let criteria = profile["success_criteria"].as_array().unwrap();
+
+        assert_eq!(criteria.len(), 55);
+        assert!(
+            criteria
+                .iter()
+                .any(|criterion| criterion["num"] == "2.4.11")
+        );
+        assert!(criteria.iter().any(|criterion| criterion["num"] == "3.3.8"));
+        assert!(!criteria.iter().any(|criterion| criterion["num"] == "4.1.1"));
+        assert!(
+            criteria
+                .iter()
+                .all(|criterion| criterion["level"] == "A" || criterion["level"] == "AA")
+        );
+        assert!(criteria.iter().all(|criterion| {
+            criterion["obligation"]
+                .as_str()
+                .is_some_and(|value| value.starts_with("wcag22-aa:"))
+        }));
+    }
+
+    #[test]
+    fn discovery_cli_emits_packet_and_flow_plan_then_promotes_manifest() {
+        let temp = tempdir().unwrap();
+        let discovery_dir = temp.path().join("discovery");
+        let generated_manifest = temp.path().join("generated.yml");
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run_cli_with_io(
+            vec![
+                "discover".to_string(),
+                "--manifest".to_string(),
+                "examples/autonomous-workbench.yml".to_string(),
+                "--out".to_string(),
+                discovery_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let packet_path = discovery_dir.join("discovery.json");
+        let flow_plan_path = discovery_dir.join("flow-plan.json");
+        assert!(packet_path.exists());
+        assert!(flow_plan_path.exists());
+        let packet: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&packet_path).unwrap()).unwrap();
+        assert_eq!(packet["schema"], "allie.discovery.v0");
+        assert!(
+            packet["surfaces"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|surface| surface["id"] == "settings")
+        );
+        assert_eq!(packet["promotion"]["default_state"], "generated_candidate");
+
+        stdout.clear();
+        stderr.clear();
+        let code = run_cli_with_io(
+            vec![
+                "promote-flow".to_string(),
+                "--discovery".to_string(),
+                packet_path.to_string_lossy().to_string(),
+                "--flow-plan".to_string(),
+                flow_plan_path.to_string_lossy().to_string(),
+                "--out".to_string(),
+                generated_manifest.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let generated = fs::read_to_string(generated_manifest).unwrap();
+        assert!(generated.contains("promotion_state: verified_flow"));
+        assert!(generated.contains("accessibility_tree: true"));
+        assert!(generated.contains("keyboard: true"));
+    }
+
+    #[test]
+    fn review_cli_adds_agentic_context_without_blocking_release() {
+        let temp = tempdir().unwrap();
+        let packet_path = write_passing_evidence_packet(&temp.path().join("run"));
+        let review_dir = temp.path().join("review");
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run_cli_with_io(
+            vec![
+                "review".to_string(),
+                "--packet".to_string(),
+                packet_path.to_string_lossy().to_string(),
+                "--out".to_string(),
+                review_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let reviewed_packet_path = review_dir.join("evidence-reviewed.json");
+        assert!(reviewed_packet_path.exists());
+        assert!(
+            review_dir
+                .join("artifacts/model-prompt-review-1.txt")
+                .exists()
+        );
+        assert!(
+            review_dir
+                .join("artifacts/model-response-review-1.json")
+                .exists()
+        );
+        assert!(
+            review_dir
+                .join("artifacts/redaction-receipt-review-1.json")
+                .exists()
+        );
+        let reviewed: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(reviewed_packet_path).unwrap()).unwrap();
+        assert_eq!(reviewed["review"][0]["provider"], "offline-recorded");
+        assert_eq!(reviewed["findings"][0]["evidence_class"], "agentic");
+
+        let projection = project_release_decision(&reviewed, &release_options(vec!["login-form"]));
+        assert_eq!(projection.exit_class, ExitClass::Success);
+        assert_eq!(projection.summary["status"], "needs_review");
+    }
+
+    #[test]
+    fn remediation_cli_writes_evidence_linked_queue() {
+        let temp = tempdir().unwrap();
+        let packet_path = write_failing_evidence_packet(&temp.path().join("run"));
+        let out_dir = temp.path().join("remediation");
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run_cli_with_io(
+            vec![
+                "remediate".to_string(),
+                "--packet".to_string(),
+                packet_path.to_string_lossy().to_string(),
+                "--out".to_string(),
+                out_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let queue_path = out_dir.join("remediation-queue.json");
+        assert!(queue_path.exists());
+        assert!(out_dir.join("action-ledger.json").exists());
+        assert!(out_dir.join("remediation-report.html").exists());
+        assert!(out_dir.join("patch-plan.md").exists());
+        let queue: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(queue_path).unwrap()).unwrap();
+        assert_eq!(queue["schema"], "allie.remediation-queue.v0");
+        assert_eq!(
+            queue["items"][0]["finding_refs"][0],
+            "login-form-axe-color-contrast-1"
+        );
+        assert!(
+            queue["items"][0]["replay_command"]
+                .as_str()
+                .unwrap()
+                .contains("run --manifest")
+        );
+        assert!(queue["items"][0]["artifact_refs"].as_array().unwrap().len() >= 1);
+    }
+
+    #[test]
     fn release_cli_writes_neutral_check_for_residual_review_packet() {
         let temp = tempdir().unwrap();
         let packet_path = write_passing_evidence_packet(&temp.path().join("run"));
@@ -3040,6 +4322,41 @@ mod tests {
         .evidence_path
     }
 
+    fn write_failing_evidence_packet(out_dir: &Path) -> PathBuf {
+        let artifacts_dir = out_dir.join("artifacts");
+        fs::create_dir_all(&artifacts_dir).unwrap();
+        fs::write(
+            artifacts_dir.join("axe-login-form.json"),
+            br#"{"violations":[{"id":"color-contrast"}]}"#,
+        )
+        .unwrap();
+        fs::write(artifacts_dir.join("login-form.png"), b"fake-png").unwrap();
+
+        let manifest = FlowManifest::load(Path::new("examples/login-flow.yml")).unwrap();
+        let mut response = passing_worker_response();
+        response.status = WorkerRunStatus::Failed;
+        response.states[0].axe_violations.push(AxeViolation {
+            id: "color-contrast".to_string(),
+            impact: Some("serious".to_string()),
+            help: Some("Elements must meet minimum color contrast ratio thresholds".to_string()),
+            description: Some("axe reported contrast failure".to_string()),
+            tags: vec!["wcag143".to_string()],
+            nodes: 1,
+        });
+        write_packet_and_report(
+            &manifest,
+            Path::new("examples/login-flow.yml"),
+            out_dir,
+            response,
+            Vec::new(),
+            Utc::now(),
+            Utc::now(),
+            "run-remediation-cli".to_string(),
+        )
+        .unwrap()
+        .evidence_path
+    }
+
     fn passing_worker_response() -> WorkerResponse {
         WorkerResponse {
             schema: WORKER_RESPONSE_SCHEMA.to_string(),
@@ -3053,6 +4370,11 @@ mod tests {
                 http_status: Some(200),
                 screenshot_path: Some("artifacts/login-form.png".to_string()),
                 axe_json_path: Some("artifacts/axe-login-form.json".to_string()),
+                dom_snapshot_path: None,
+                accessibility_tree_path: None,
+                video_path: None,
+                trace_path: None,
+                keyboard_focus_order: Vec::new(),
                 axe_violations: Vec::new(),
                 console_errors: Vec::new(),
                 network_errors: Vec::new(),

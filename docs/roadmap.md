@@ -34,21 +34,20 @@ Allie should let a compliance engineer point it at an application and receive:
 
 ## Now
 
-1. Make autonomous discovery a versioned, replay-gated contract
-   (`backlog.d/006-autonomous-discovery-replay-gated.md`).
-2. Build the complete WCAG obligation ledger and drilldown report contract
-   (`backlog.d/007-complete-wcag-drilldown-reporting.md`).
-3. Expand the fixture corpus so discovery, generated flows, and release
-   enforcement have real falsifiers.
+1. Keep the autonomous workbench smoke green as the primary delivery oracle
+   (`npm run autonomous:smoke`).
+2. Use the generated receipts under `.allie/*/autonomous-smoke/` to inspect
+   discovery, replay, WCAG drilldown, agentic review, remediation, and release
+   blocking behavior.
+3. Harden from local fixture proof toward real staged applications without
+   weakening replay, redaction, or model-promotion gates.
 
 ## Next
 
-1. Generate comprehensive Playwright and axe suites from discovered surfaces and
-   promote only replayed flows to release-required coverage.
-2. Add the model gateway and vision-agent review contract with no live provider
-   calls until policy, redaction, and audit receipts are typed and verified.
-3. Add WCAG drilldown report views for engineer fix lists, accessibility
-   specialist review, and audit summaries.
+1. Add authenticated staged-app discovery and changed-surface inference.
+2. Add live provider adapters behind the offline model gateway contract.
+3. Add richer remediation patch adapters, before/after packet comparison, and
+   reviewer attestations.
 
 ## Later
 

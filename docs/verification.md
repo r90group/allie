@@ -27,6 +27,7 @@ cargo test --locked
 npm run worker:smoke
 npm run evidence:smoke
 npm run release:smoke
+npm run autonomous:smoke
 ```
 
 ## Expected Evidence
@@ -68,6 +69,23 @@ The expected V0 fixture decision is `needs_review` with a neutral GitHub check:
 deterministic evidence passed, but keyboard/focus/zoom/reduced-motion and human
 assistive-technology obligations are still marked `not_tested` or
 `needs_review`.
+
+`npm run autonomous:smoke` proves the autonomous workbench path. It leaves:
+
+```text
+.allie/discovery/autonomous-smoke/discovery.json
+.allie/discovery/autonomous-smoke/flow-plan.json
+.allie/discovery/autonomous-smoke/generated-flow.yml
+.allie/runs/autonomous-smoke/evidence.json
+.allie/reviews/autonomous-smoke/evidence-reviewed.json
+.allie/remediation/autonomous-smoke/remediation-queue.json
+.allie/releases/autonomous-smoke/release-summary.json
+```
+
+The smoke expects the generated replay to find the fixture's known deterministic
+contrast issue. That failure proves enforcement and remediation are wired:
+review still runs, remediation writes a queue, and release projection blocks on
+deterministic evidence while keeping agentic context non-authoritative.
 
 ## Failure Meanings
 

@@ -1,6 +1,6 @@
 # Generate comprehensive Playwright and axe enforcement coverage
 
-Priority: P1 - Status: pending - Estimate: XL
+Priority: P1 - Status: done - Estimate: XL
 
 ## PRD Summary
 
@@ -89,3 +89,17 @@ Priority: P1 - Status: pending - Estimate: XL
 Deque documents axe rule tags for WCAG versions and success criteria, and notes
 that hidden regions need to be activated or rendered before analysis. Generated
 Playwright coverage is how Allie should make that requirement practical.
+
+## Delivered
+
+- Promoted discovered surfaces into generated replay manifests with axe,
+  screenshot, DOM snapshot, accessibility-tree, keyboard, video request, and
+  trace flags.
+- Expanded the browser worker to capture DOM snapshots, DOM-derived
+  accessibility-tree JSON, keyboard focus order, trace JSON, screenshots, raw axe
+  JSON, and opportunistic stable video artifacts.
+- Generated replay remains the enforcement boundary: the autonomous smoke expects
+  the known fixture contrast issue to fail and block release.
+- Verified by `npm run autonomous:smoke`, including artifact-type assertions for
+  `axe_json`, `screenshot`, `dom_snapshot`, `accessibility_tree`, `trace`, and
+  `html_report`.

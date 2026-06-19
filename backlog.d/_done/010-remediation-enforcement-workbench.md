@@ -1,6 +1,6 @@
 # Add remediation and release enforcement workbench
 
-Priority: P2 - Status: pending - Estimate: XL
+Priority: P2 - Status: done - Estimate: XL
 
 ## PRD Summary
 
@@ -90,3 +90,16 @@ Priority: P2 - Status: pending - Estimate: XL
 Remediation is where Allie becomes operationally useful. It should still obey the
 core rule: no action without evidence, replay, provenance, and an explicit
 release-policy effect.
+
+## Delivered
+
+- Added `allie remediate --packet <evidence.json> --out <dir>`.
+- Added `allie.remediation-queue.v0`, `allie.action-ledger.v0`,
+  `remediation-report.html`, and `patch-plan.md` outputs.
+- Remediation items include finding refs, WCAG obligation, affected state,
+  artifact refs, source hints, suggested fix, confidence, replay command, and
+  policy effect.
+- Release projection continues to block deterministic/scripted packet failures
+  and missing evidence, while keeping model-only context neutral.
+- Verified by `npm run autonomous:smoke`, which writes remediation receipts and
+  blocks the reviewed packet on the known deterministic contrast failure.
