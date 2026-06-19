@@ -34,16 +34,44 @@ Accessibility work is often split across manual expert review, browser extension
 - [docs/naming.md](docs/naming.md): naming decisions and alternates.
 - [docs/roadmap.md](docs/roadmap.md): proposed build sequence.
 
-## Current CLI Placeholder
+## V0 Local Evidence Loop
 
 ```sh
-cargo run --locked
+cargo run --locked -- run --manifest examples/login-flow.yml --out .allie/runs/latest
 ```
 
-The binary currently prints the project line and next target. The first real CLI milestone is:
+The V0 command runs the checked-in login fixture through the browser worker,
+captures axe output and a screenshot, and writes a replayable evidence packet
+plus a local HTML report:
 
 ```sh
-allie run --manifest <flow.yml>
+.allie/runs/latest/evidence.json
+.allie/runs/latest/report.html
+.allie/runs/latest/artifacts/axe-login-form.json
+.allie/runs/latest/artifacts/login-form.png
 ```
 
-That command should execute one authenticated journey against one staged app, run Playwright plus axe, and emit a replayable evidence packet.
+The packet reports accessibility evidence status, confidence, and residual
+review needs. It is not a legal compliance guarantee.
+
+## Local Verification
+
+Install the browser worker dependencies once:
+
+```sh
+npm install
+npx playwright install chromium
+```
+
+Then run the repo gates:
+
+```sh
+cargo fmt --check
+cargo test --locked
+npm run worker:smoke
+cargo run --locked -- run --manifest examples/login-flow.yml --out .allie/runs/latest
+```
+
+The worker smoke proves Playwright plus axe can inspect the checked-in fixture.
+The final command is the V0 live oracle and leaves inspectable evidence under
+`.allie/runs/latest/`.

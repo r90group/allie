@@ -1,0 +1,31 @@
+id: login-flow
+name: Local login fixture flow
+app_name: Allie fixture app
+environment: local-fixture
+auth_profile: local-fixture-no-auth
+target:
+  kind: local_fixture
+  fixture_dir: ../fixtures/login
+policy:
+  profile: wcag22-aa
+  blocking_classes:
+    - deterministic
+    - scripted_required
+browser:
+  viewport:
+    width: 1280
+    height: 900
+  color_scheme: light
+  reduced_motion: reduce
+  locale: en-US
+  zoom: 1.0
+flow:
+  id: login-critical-path
+  description: Inspect the login form state for deterministic accessibility evidence.
+  states:
+    - id: login-form
+      path: /
+      description: Initial login form route state.
+      required: true
+      axe: true
+      screenshot: true

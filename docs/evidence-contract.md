@@ -1,6 +1,6 @@
 # Evidence Contract
 
-This is the first draft of the Allie evidence packet. It is intentionally schema-shaped but not yet a formal JSON Schema.
+This is the first draft of the Allie evidence packet. The formal V0 JSON Schema lives at `schemas/allie.evidence.v0.schema.json`.
 
 ## Packet
 

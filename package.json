@@ -1,0 +1,13 @@
+{
+  "name": "allie-browser-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "worker:smoke": "node workers/browser/run.mjs --smoke .allie/worker-smoke"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "playwright": "^1.49.1"
+  }
+}

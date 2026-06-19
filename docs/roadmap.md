@@ -1,20 +1,29 @@
 # Roadmap
 
+## Current V0 Loop
+
+The first local evidence loop is implemented around:
+
+```sh
+cargo run --locked -- run --manifest examples/login-flow.yml --out .allie/runs/latest
+```
+
+It reads the checked-in login manifest, serves the local fixture through the
+browser worker, runs Playwright plus axe, captures a screenshot, writes raw axe
+JSON, emits an `allie.evidence.v0` packet, and generates a local HTML report.
+
 ## Now
 
-1. Define a formal `allie.evidence.v0` JSON Schema.
-2. Define a flow manifest format.
-3. Implement `allie run --manifest <path> --out <dir>`.
-4. Build a minimal Playwright/axe worker contract.
-5. Generate local evidence packets and HTML reports.
+1. Harden V0 trust boundaries and failure taxonomy.
+2. Add standards profile mapping for `wcag22-aa`.
+3. Make verification boring in CI and local runbooks.
 
 ## Next
 
-1. Add standards profile mapping for `wcag22-aa`.
-2. Add deterministic PR/CI exit semantics.
-3. Add screenshot, DOM, and accessibility tree artifact capture.
-4. Add model-gateway policy types, but keep provider calls disabled by default.
-5. Add fixture app and golden evidence tests.
+1. Add deterministic PR/CI exit semantics.
+2. Add DOM and accessibility tree artifact capture behind redaction policy.
+3. Add model-gateway policy types, but keep provider calls disabled by default.
+4. Add fixture packet golden tests once the trust-boundary taxonomy lands.
 
 ## Later
 
@@ -28,7 +37,7 @@
 
 ## First Acceptance Slice
 
-The first slice is not complete until this command works against a checked-in fixture:
+The first slice is complete when this command works against a checked-in fixture:
 
 ```sh
 allie run --manifest examples/login-flow.yml --out .allie/runs/latest

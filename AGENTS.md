@@ -9,9 +9,10 @@ Run before claiming repo changes are complete:
 ```sh
 cargo fmt --check
 cargo test --locked
+npm run worker:smoke
 ```
 
-When a real browser worker is introduced, add the worker smoke command here and keep it green.
+The browser worker smoke is part of the gate; keep it green when worker or fixture behavior changes.
 
 ## Design Rules
 
