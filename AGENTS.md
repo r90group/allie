@@ -10,9 +10,11 @@ Run before claiming repo changes are complete:
 cargo fmt --check
 cargo test --locked
 npm run worker:smoke
+npm run evidence:smoke
+npm run release:smoke
 ```
 
-The browser worker smoke is part of the gate; keep it green when worker or fixture behavior changes.
+The browser worker smoke, V0 evidence smoke, and release projection smoke are part of the gate; keep them green when worker, fixture, packet, report, release-decision, or verification behavior changes.
 
 ## Design Rules
 

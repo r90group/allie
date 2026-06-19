@@ -54,6 +54,26 @@ plus a local HTML report:
 The packet reports accessibility evidence status, confidence, and residual
 review needs. It is not a legal compliance guarantee.
 
+## Release Decision Projection
+
+```sh
+cargo run --locked -- release --packet .allie/runs/latest/evidence.json --out .allie/releases/latest --changed-surface login-form
+```
+
+The release command reads an `allie.evidence.v0` packet and writes a release
+summary, a GitHub Checks-style payload, and an HTML decision report:
+
+```sh
+.allie/releases/latest/release-summary.json
+.allie/releases/latest/github-check.json
+.allie/releases/latest/release-report.html
+```
+
+It blocks on packet failures, missing evidence for changed surfaces, expired
+waivers on touched surfaces, and invalid waiver metadata. Stale evidence,
+model-only findings, `needs_review` obligations, and `not_tested` obligations
+produce a neutral review-required decision instead of a hard block.
+
 ## Local Verification
 
 Install the browser worker dependencies once:
@@ -69,9 +89,16 @@ Then run the repo gates:
 cargo fmt --check
 cargo test --locked
 npm run worker:smoke
+npm run evidence:smoke
+npm run release:smoke
 cargo run --locked -- run --manifest examples/login-flow.yml --out .allie/runs/latest
+cargo run --locked -- release --packet .allie/runs/latest/evidence.json --out .allie/releases/latest --changed-surface login-form
 ```
 
 The worker smoke proves Playwright plus axe can inspect the checked-in fixture.
-The final command is the V0 live oracle and leaves inspectable evidence under
-`.allie/runs/latest/`.
+The evidence smoke leaves a stable receipt under `.allie/runs/v0-smoke/`. The
+release smoke projects that packet into `.allie/releases/v0-smoke/`. The final
+two commands are the V0 live oracle and release projection, leaving inspectable
+evidence under `.allie/runs/latest/` and `.allie/releases/latest/`.
+
+For a cold-start verification path, see [docs/verification.md](docs/verification.md).

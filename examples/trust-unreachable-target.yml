@@ -1,15 +1,15 @@
-id: login-flow
-name: Local login fixture flow
-app_name: Allie fixture app
-environment: local-fixture
+id: trust-unreachable-target
+name: Unreachable target trust-boundary fixture
+app_name: Unreachable fixture app
+environment: local-unreachable
 auth_profile: local-fixture-no-auth
 credentials:
   profile: local-fixture-no-auth
   provider: none
   required: false
 target:
-  kind: local_fixture
-  fixture_dir: ../fixtures/login
+  kind: url
+  base_url: http://127.0.0.1:65530/
 policy:
   profile: wcag22-aa
   blocking_classes:
@@ -33,12 +33,12 @@ browser:
   locale: en-US
   zoom: 1.0
 flow:
-  id: login-critical-path
-  description: Inspect the login form state for deterministic accessibility evidence.
+  id: unreachable-critical-path
+  description: Exercise unreachable target worker error mapping.
   states:
-    - id: login-form
+    - id: unreachable-home
       path: /
-      description: Initial login form route state.
+      description: Route state that should be unreachable.
       required: true
       axe: true
       screenshot: true

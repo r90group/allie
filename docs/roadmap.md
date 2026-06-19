@@ -14,26 +14,24 @@ JSON, emits an `allie.evidence.v0` packet, and generates a local HTML report.
 
 ## Now
 
-1. Harden V0 trust boundaries and failure taxonomy.
-2. Add standards profile mapping for `wcag22-aa`.
-3. Make verification boring in CI and local runbooks.
+1. Expand DOM and accessibility tree artifact capture behind redaction policy.
+2. Add model-gateway adapter tests while keeping provider calls disabled by
+   default.
+3. Add fixture packet golden tests for larger flow coverage.
 
 ## Next
 
-1. Add deterministic PR/CI exit semantics.
-2. Add DOM and accessibility tree artifact capture behind redaction policy.
-3. Add model-gateway policy types, but keep provider calls disabled by default.
-4. Add fixture packet golden tests once the trust-boundary taxonomy lands.
+1. Wire `github-check.json` into a hosted GitHub Checks integration.
+2. Shape the hosted evidence viewer from local packet/report semantics.
+3. Add trend ledger indexing across repeated evidence runs.
 
 ## Later
 
 1. OpenRouter-backed multimodal first-pass review.
-2. GitHub Checks integration.
-3. Hosted evidence viewer.
-4. SME review workbench.
-5. Remediation PR drafting.
-6. Browser extension capture companion.
-7. Multi-repo dashboard and trends.
+2. SME review workbench.
+3. Remediation PR drafting.
+4. Browser extension capture companion.
+5. Multi-repo dashboard and trends.
 
 ## First Acceptance Slice
 

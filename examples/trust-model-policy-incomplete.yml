@@ -1,5 +1,5 @@
-id: login-flow
-name: Local login fixture flow
+id: trust-model-policy-incomplete
+name: Incomplete model policy trust-boundary fixture
 app_name: Allie fixture app
 environment: local-fixture
 auth_profile: local-fixture-no-auth
@@ -20,7 +20,7 @@ artifacts:
   redaction_status: not_redacted_local_fixture
   retention_class: local_ephemeral
 model:
-  enabled: false
+  enabled: true
   provider_allowlist: []
   zdr_required: true
 known_nondeterminism: []
@@ -34,7 +34,7 @@ browser:
   zoom: 1.0
 flow:
   id: login-critical-path
-  description: Inspect the login form state for deterministic accessibility evidence.
+  description: Exercise model policy fail-closed behavior.
   states:
     - id: login-form
       path: /

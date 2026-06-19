@@ -7,6 +7,7 @@ This is the first draft of the Allie evidence packet. The formal V0 JSON Schema 
 ```json
 {
   "schema": "allie.evidence.v0",
+  "summary": {},
   "run": {},
   "target": {},
   "policy": {},
@@ -136,3 +137,33 @@ Every packet needs enough data to rerun the same path:
 - browser settings;
 - seed data requirements;
 - known nondeterminism.
+
+## Waivers
+
+Waivers are packet-attached release inputs, not global dashboards. A waiver that
+touches a changed surface must carry:
+
+- `id`;
+- `surface`;
+- `status`: `waived` or `risk_accepted`;
+- `provenance`: actor/reason/review source;
+- `expires_at`;
+- `packet_ref` or `packet_refs`.
+
+Release projection blocks expired touched waivers and touched waivers missing
+the required metadata.
+
+## Release Decision Projection
+
+`allie release --packet <evidence.json> --out <dir> --changed-surface <id>`
+projects a packet into:
+
+- `release-summary.json`;
+- `github-check.json`;
+- `release-report.html`.
+
+The projection blocks on deterministic/scripted/infrastructure packet failures,
+missing required evidence for changed surfaces, expired touched waivers, and
+invalid touched-waiver metadata. It marks stale evidence, model-only findings,
+`needs_review`, and `not_tested` obligations as review-required neutral outputs
+instead of hard release blocks.

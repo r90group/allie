@@ -8,13 +8,15 @@
     "schema": { "const": "allie.evidence.v0" },
     "summary": {
       "type": "object",
-      "required": ["status", "exit_code", "deterministic_failures", "scripted_failures", "states_captured"],
+      "required": ["status", "exit_code", "deterministic_failures", "scripted_failures", "infrastructure_failures", "states_captured", "failure_class"],
       "properties": {
         "status": { "enum": ["pass", "fail", "error"] },
         "exit_code": { "type": "integer" },
         "deterministic_failures": { "type": "integer", "minimum": 0 },
         "scripted_failures": { "type": "integer", "minimum": 0 },
-        "states_captured": { "type": "integer", "minimum": 0 }
+        "infrastructure_failures": { "type": "integer", "minimum": 0 },
+        "states_captured": { "type": "integer", "minimum": 0 },
+        "failure_class": { "type": ["string", "null"] }
       },
       "additionalProperties": false
     },
@@ -26,13 +28,15 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "type", "path", "hash", "redaction_status", "creation_tool", "timestamp"],
+        "required": ["id", "type", "path", "hash", "redaction_status", "retention_class", "unavailable_reason", "creation_tool", "timestamp"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "type": { "type": "string", "minLength": 1 },
           "path": { "type": "string", "minLength": 1 },
           "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "redaction_status": { "type": "string", "minLength": 1 },
+          "retention_class": { "type": "string", "minLength": 1 },
+          "unavailable_reason": { "type": ["string", "null"] },
           "related_flow_state": { "type": ["string", "null"] },
           "creation_tool": { "type": "string", "minLength": 1 },
           "timestamp": { "type": "string", "minLength": 1 }
@@ -42,7 +46,36 @@
     },
     "findings": { "type": "array" },
     "verdicts": { "type": "array" },
-    "waivers": { "type": "array" },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "surface", "status", "provenance", "expires_at"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "surface": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["waived", "risk_accepted"] },
+          "provenance": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "object", "minProperties": 1 }
+            ]
+          },
+          "expires_at": { "type": "string", "minLength": 1 },
+          "packet_ref": { "type": "string", "minLength": 1 },
+          "packet_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          }
+        },
+        "anyOf": [
+          { "required": ["packet_ref"] },
+          { "required": ["packet_refs"] }
+        ],
+        "additionalProperties": true
+      }
+    },
     "review": { "type": "array" },
     "replay": {
       "type": "object",

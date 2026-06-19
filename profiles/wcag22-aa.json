@@ -1,0 +1,76 @@
+{
+  "schema": "allie.obligation-profile.v0",
+  "id": "wcag22-aa",
+  "version": "2026-06-19",
+  "source": "W3C WCAG 2.2 AA plus axe-core rule tags",
+  "deterministic_pass_obligation": {
+    "obligation": "wcag22-aa:deterministic-axe-rules",
+    "title": "No axe-core violations in captured states"
+  },
+  "axe_tag_map": {
+    "wcag111": {
+      "obligation": "wcag22-aa:1.1.1-non-text-content",
+      "title": "Non-text content"
+    },
+    "wcag131": {
+      "obligation": "wcag22-aa:1.3.1-info-and-relationships",
+      "title": "Info and relationships"
+    },
+    "wcag141": {
+      "obligation": "wcag22-aa:1.4.1-use-of-color",
+      "title": "Use of color"
+    },
+    "wcag143": {
+      "obligation": "wcag22-aa:1.4.3-contrast-minimum",
+      "title": "Contrast minimum"
+    },
+    "wcag211": {
+      "obligation": "wcag22-aa:2.1.1-keyboard",
+      "title": "Keyboard"
+    },
+    "wcag241": {
+      "obligation": "wcag22-aa:2.4.1-bypass-blocks",
+      "title": "Bypass blocks"
+    },
+    "wcag242": {
+      "obligation": "wcag22-aa:2.4.2-page-titled",
+      "title": "Page titled"
+    },
+    "wcag244": {
+      "obligation": "wcag22-aa:2.4.4-link-purpose-in-context",
+      "title": "Link purpose in context"
+    },
+    "wcag332": {
+      "obligation": "wcag22-aa:3.3.2-labels-or-instructions",
+      "title": "Labels or instructions"
+    },
+    "wcag412": {
+      "obligation": "wcag22-aa:4.1.2-name-role-value",
+      "title": "Name, role, value"
+    }
+  },
+  "scripted_obligations": [
+    {
+      "obligation": "wcag22-aa:2.1.1-keyboard-traversal",
+      "title": "Keyboard traversal through the critical flow"
+    },
+    {
+      "obligation": "wcag22-aa:1.4.10-zoom-reflow",
+      "title": "Zoom and reflow at release viewport"
+    },
+    {
+      "obligation": "wcag22-aa:2.2.2-reduced-motion",
+      "title": "Reduced motion behavior"
+    }
+  ],
+  "human_review_obligations": [
+    {
+      "obligation": "wcag22-aa:human-content-meaning",
+      "title": "Content meaning and cognitive load"
+    },
+    {
+      "obligation": "wcag22-aa:human-assistive-technology-review",
+      "title": "Manual assistive technology review"
+    }
+  ]
+}
