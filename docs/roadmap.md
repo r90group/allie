@@ -34,26 +34,34 @@ Allie should let a compliance engineer point it at an application and receive:
 
 ## Now
 
-1. Keep the autonomous workbench smoke green as the primary delivery oracle
-   (`npm run autonomous:smoke`).
-2. Use the generated receipts under `.allie/*/autonomous-smoke/` to inspect
-   discovery, replay, WCAG drilldown, agentic review, remediation, and release
-   blocking behavior.
-3. Harden from local fixture proof toward real staged applications without
-   weakening replay, redaction, or model-promotion gates.
+1. Replace the synchronous advisory agent helper with durable autonomous jobs
+   (`backlog.d/011-replace-synchronous-agent-helper-with-durable-jobs.md`).
+   A 120-second subprocess timeout is acceptable as a smoke guard, not as the
+   product contract for agentic assessment.
+2. Make WCAG reporting an exact 55-criterion surface matrix
+   (`backlog.d/012-make-wcag-coverage-a-55-criterion-surface-matrix.md`).
+   Supporting checks and aggregate gates should explain evidence, not inflate
+   the standards denominator.
+3. Keep the autonomous workbench smoke green as the primary regression oracle
+   while the V1 job and coverage contracts land (`npm run autonomous:smoke`).
 
 ## Next
 
-1. Add authenticated staged-app discovery and changed-surface inference.
-2. Add live provider adapters behind the offline model gateway contract.
-3. Add richer remediation patch adapters, before/after packet comparison, and
-   reviewer attestations.
+1. Package the host-agnostic consumer contract with `allie init`, `allie verify`,
+   stable reporter outputs, and GitHub/Azure examples as thin wrappers
+   (`backlog.d/014-package-host-agnostic-consumer-contract.md`).
+2. Track the accessibility tooling landscape as product input so Allie
+   differentiates on evidence contracts, replayability, governance, and release
+   semantics rather than scanner parity
+   (`backlog.d/013-track-accessibility-tooling-landscape.md`).
+3. Add authenticated staged-app discovery and changed-surface inference once the
+   job and coverage contracts are explicit.
 
 ## Later
 
 1. Enable approved live multimodal provider calls behind the model gateway.
-2. Add remediation branch drafting with evidence-linked source hints and replay
-   proof.
+2. Add richer remediation patch adapters, before/after packet comparison, and
+   reviewer attestations.
 3. Wire GitHub Checks, PR comments, and hosted evidence viewer from the same
    packets.
 4. Add SME review workbench, reviewer attestations, and promotion workflows.
