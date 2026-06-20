@@ -16,7 +16,10 @@ const NEXT_STEP: &str = "Next implementation target: allie run --manifest <flow.
 const EVIDENCE_SCHEMA: &str = "allie.evidence.v0";
 const WORKER_REQUEST_SCHEMA: &str = "allie.worker.request.v0";
 const WORKER_RESPONSE_SCHEMA: &str = "allie.worker.response.v0";
+const PRODUCT_MAP_SCHEMA: &str = "allie.product-map.v0";
+const COMPLIANCE_REPORT_SCHEMA: &str = "allie.compliance-report.v0";
 const DEFAULT_WORKER_TIMEOUT_MS: u64 = 30_000;
+const DEFAULT_AGENT_TIMEOUT_MS: u64 = 120_000;
 const WCAG22_AA_PROFILE_JSON: &str = include_str!("../profiles/wcag22-aa.json");
 
 #[derive(Debug)]
@@ -137,6 +140,49 @@ struct RemediateOptions {
 }
 
 #[derive(Debug)]
+struct MapOptions {
+    manifest_path: PathBuf,
+    out_dir: PathBuf,
+    project_root: PathBuf,
+    agent_runner: AgentRunnerKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AgentRunnerKind {
+    Local,
+    OpenCode,
+    Omp,
+}
+
+impl AgentRunnerKind {
+    fn parse(value: &str) -> std::result::Result<Self, String> {
+        match value {
+            "local" => Ok(Self::Local),
+            "opencode" => Ok(Self::OpenCode),
+            "omp" => Ok(Self::Omp),
+            unexpected => Err(format!(
+                "unsupported agent runner {unexpected}; expected local, opencode, or omp"
+            )),
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Local => "local",
+            Self::OpenCode => "opencode",
+            Self::Omp => "omp",
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ReportOptions {
+    map_path: PathBuf,
+    packet_path: PathBuf,
+    out_dir: PathBuf,
+}
+
+#[derive(Debug)]
 struct ReleaseReceipt {
     status: String,
     exit_class: ExitClass,
@@ -169,6 +215,21 @@ struct RemediationReceipt {
     ledger_path: PathBuf,
     report_path: PathBuf,
     patch_plan_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct MapReceipt {
+    map_path: PathBuf,
+    report_path: PathBuf,
+    runner_receipt_path: PathBuf,
+    flow_manifest_path: PathBuf,
+}
+
+#[derive(Debug)]
+struct ComplianceReportReceipt {
+    report_json_path: PathBuf,
+    report_html_path: PathBuf,
+    summary_path: PathBuf,
 }
 
 pub fn run_cli(args: impl IntoIterator<Item = String>) -> i32 {
@@ -260,6 +321,61 @@ pub fn run_cli_with_io(
                 ExitClass::Usage.code()
             }
         },
+        Some("map") => match parse_map_options(&args[1..]) {
+            Ok(options) => match run_map(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(stdout, "Product map: {}", receipt.map_path.display());
+                    let _ = writeln!(stdout, "Surface map: {}", receipt.report_path.display());
+                    let _ = writeln!(
+                        stdout,
+                        "Agent receipt: {}",
+                        receipt.runner_receipt_path.display()
+                    );
+                    let _ = writeln!(
+                        stdout,
+                        "Generated flow: {}",
+                        receipt.flow_manifest_path.display()
+                    );
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
+        Some("report") => match parse_report_options(&args[1..]) {
+            Ok(options) => match run_compliance_report(options) {
+                Ok(receipt) => {
+                    let _ = writeln!(
+                        stdout,
+                        "Compliance JSON: {}",
+                        receipt.report_json_path.display()
+                    );
+                    let _ = writeln!(
+                        stdout,
+                        "Compliance report: {}",
+                        receipt.report_html_path.display()
+                    );
+                    let _ = writeln!(stdout, "Summary: {}", receipt.summary_path.display());
+                    ExitClass::Success.code()
+                }
+                Err(error) => {
+                    let _ = writeln!(stderr, "allie: {error}");
+                    ExitClass::InfrastructureFailure.code()
+                }
+            },
+            Err(error) => {
+                let _ = writeln!(stderr, "allie: {error}");
+                print_usage(stderr);
+                ExitClass::Usage.code()
+            }
+        },
         Some("review") => match parse_review_options(&args[1..]) {
             Ok(options) => match run_review(options) {
                 Ok(receipt) => {
@@ -337,7 +453,7 @@ pub fn run_cli_with_io(
 fn print_usage(writer: &mut dyn Write) {
     let _ = writeln!(
         writer,
-        "Usage:\n  allie run --manifest <flow.yml> --out <output-dir>\n  allie discover --manifest <flow.yml> --out <output-dir>\n  allie promote-flow --discovery <discovery.json> --flow-plan <flow-plan.json> --out <flow.yml>\n  allie review --packet <evidence.json> --out <output-dir>\n  allie remediate --packet <evidence.json> --out <output-dir>\n  allie release --packet <evidence.json> --out <output-dir> [--changed-surface <id>] [--stale-after-days <days>]"
+        "Usage:\n  allie run --manifest <flow.yml> --out <output-dir>\n  allie discover --manifest <flow.yml> --out <output-dir>\n  allie promote-flow --discovery <discovery.json> --flow-plan <flow-plan.json> --out <flow.yml>\n  allie map --manifest <flow.yml> --out <output-dir> [--project-root <dir>] [--agent local|opencode|omp]\n  allie report --map <product-map.json> --packet <evidence.json> --out <output-dir>\n  allie review --packet <evidence.json> --out <output-dir>\n  allie remediate --packet <evidence.json> --out <output-dir>\n  allie release --packet <evidence.json> --out <output-dir> [--changed-surface <id>] [--stale-after-days <days>]"
     );
 }
 
@@ -453,6 +569,97 @@ fn parse_discovery_options(args: &[String]) -> std::result::Result<DiscoveryOpti
 
     Ok(DiscoveryOptions {
         manifest_path: manifest_path.ok_or_else(|| "--manifest is required".to_string())?,
+        out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
+    })
+}
+
+fn parse_map_options(args: &[String]) -> std::result::Result<MapOptions, String> {
+    let mut manifest_path = None;
+    let mut out_dir = None;
+    let mut project_root = None;
+    let mut agent_runner = AgentRunnerKind::Local;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--manifest" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--manifest requires a path".to_string())?;
+                manifest_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a directory".to_string())?;
+                out_dir = Some(PathBuf::from(value));
+            }
+            "--project-root" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--project-root requires a directory".to_string())?;
+                project_root = Some(PathBuf::from(value));
+            }
+            "--agent" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--agent requires local, opencode, or omp".to_string())?;
+                agent_runner = AgentRunnerKind::parse(value)?;
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(MapOptions {
+        manifest_path: manifest_path.ok_or_else(|| "--manifest is required".to_string())?,
+        out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
+        project_root: project_root.unwrap_or_else(|| PathBuf::from(".")),
+        agent_runner,
+    })
+}
+
+fn parse_report_options(args: &[String]) -> std::result::Result<ReportOptions, String> {
+    let mut map_path = None;
+    let mut packet_path = None;
+    let mut out_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--map" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--map requires a path".to_string())?;
+                map_path = Some(PathBuf::from(value));
+            }
+            "--packet" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--packet requires a path".to_string())?;
+                packet_path = Some(PathBuf::from(value));
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "--out requires a directory".to_string())?;
+                out_dir = Some(PathBuf::from(value));
+            }
+            unexpected => return Err(format!("unexpected argument: {unexpected}")),
+        }
+        index += 1;
+    }
+
+    Ok(ReportOptions {
+        map_path: map_path.ok_or_else(|| "--map is required".to_string())?,
+        packet_path: packet_path.ok_or_else(|| "--packet is required".to_string())?,
         out_dir: out_dir.ok_or_else(|| "--out is required".to_string())?,
     })
 }
@@ -779,6 +986,1239 @@ fn run_promote_flow(options: PromoteFlowOptions) -> Result<PromoteFlowReceipt> {
     Ok(PromoteFlowReceipt {
         manifest_path: options.out_path,
     })
+}
+
+fn run_map(options: MapOptions) -> Result<MapReceipt> {
+    fs::create_dir_all(&options.out_dir).map_err(|source| AllieError::Io {
+        context: format!("create map output directory {}", options.out_dir.display()),
+        source,
+    })?;
+
+    let manifest = FlowManifest::load(&options.manifest_path)?;
+    manifest.validate()?;
+    let project_root =
+        fs::canonicalize(&options.project_root).unwrap_or_else(|_| options.project_root.clone());
+    let surfaces = product_surfaces(&manifest, &options.manifest_path, &project_root)?;
+    let workflows = vec![ProductWorkflow {
+        id: manifest.flow.id.clone(),
+        title: manifest.flow.description.clone(),
+        surface_refs: surfaces.iter().map(|surface| surface.id.clone()).collect(),
+        user_story: format!(
+            "As an accessibility compliance engineer, I can assess {} across the discovered product surface.",
+            manifest.app_name
+        ),
+        generated_flow_manifest: "generated-flow.yml".to_string(),
+        states: manifest
+            .flow
+            .states
+            .iter()
+            .map(|state| state.id.clone())
+            .collect(),
+    }];
+    let agent = run_agent_mapper(
+        options.agent_runner,
+        &options.out_dir,
+        &project_root,
+        &manifest,
+        &options.manifest_path,
+        &surfaces,
+    )?;
+    let map = ProductMapPacket {
+        schema: PRODUCT_MAP_SCHEMA.to_string(),
+        generated_at: now_utc().to_rfc3339(),
+        source_manifest: options.manifest_path.to_string_lossy().to_string(),
+        project_root: project_root.to_string_lossy().to_string(),
+        app_name: manifest.app_name.clone(),
+        environment: manifest.environment.clone(),
+        policy_profile: manifest.policy.profile.clone(),
+        target: manifest.target.clone(),
+        agent,
+        standards: standards_profile_summary(&manifest.policy.profile),
+        surfaces,
+        workflows,
+        open_questions: product_map_open_questions(&manifest),
+    };
+    let generated_manifest = generated_flow_manifest(&manifest, &map.surfaces);
+
+    let map_path = options.out_dir.join("product-map.json");
+    let report_path = options.out_dir.join("surface-map.html");
+    let runner_receipt_path = options.out_dir.join("agent-runner-receipt.json");
+    let flow_manifest_path = options.out_dir.join("generated-flow.yml");
+    write_json_pretty(&map_path, &map)?;
+    write_string(&report_path, &render_product_surface_map(&map))?;
+    write_json_pretty(&runner_receipt_path, &map.agent)?;
+    let flow_yaml =
+        serde_yaml::to_string(&generated_manifest).map_err(|source| AllieError::Yaml {
+            context: format!(
+                "serialize generated flow manifest {}",
+                flow_manifest_path.display()
+            ),
+            source,
+        })?;
+    write_string(&flow_manifest_path, &flow_yaml)?;
+
+    Ok(MapReceipt {
+        map_path,
+        report_path,
+        runner_receipt_path,
+        flow_manifest_path,
+    })
+}
+
+fn run_agent_mapper(
+    runner: AgentRunnerKind,
+    out_dir: &Path,
+    project_root: &Path,
+    manifest: &FlowManifest,
+    manifest_path: &Path,
+    surfaces: &[ProductSurface],
+) -> Result<AgentRunnerReceiptPacket> {
+    let base_receipt = AgentRunnerReceiptPacket {
+        schema: "allie.agent-runner-receipt.v0".to_string(),
+        runner: runner.as_str().to_string(),
+        mode: "deterministic-local-map".to_string(),
+        status: "local_scan_completed".to_string(),
+        capabilities: agent_runner_capabilities(runner),
+        command: Vec::new(),
+        prompt_path: None,
+        transcript_path: None,
+        warnings: vec![
+            "Core map generation is deterministic; agent findings are advisory until promoted by evidence.".to_string(),
+        ],
+        sources: agent_runner_sources(runner),
+    };
+    if runner == AgentRunnerKind::Local {
+        return Ok(base_receipt);
+    }
+
+    let context_dir = out_dir.join("agent-context");
+    fs::create_dir_all(&context_dir).map_err(|source| AllieError::Io {
+        context: format!("create agent context directory {}", context_dir.display()),
+        source,
+    })?;
+    let seed_path = context_dir.join("map-seed.json");
+    let prompt_path = context_dir.join("agent-map-prompt.md");
+    let transcript_path = out_dir.join(format!("{}-map-transcript.txt", runner.as_str()));
+    let seed = serde_json::json!({
+        "schema": "allie.agent-map-seed.v0",
+        "app_name": manifest.app_name.clone(),
+        "environment": manifest.environment.clone(),
+        "policy_profile": manifest.policy.profile.clone(),
+        "source_manifest": manifest_path.to_string_lossy(),
+        "project_root": project_root.to_string_lossy(),
+        "surfaces": surfaces,
+        "states": manifest.flow.states.clone(),
+        "standards": standards_profile_summary(&manifest.policy.profile)
+    });
+    write_json_pretty(&seed_path, &seed)?;
+    write_string(
+        &prompt_path,
+        &agent_map_prompt(manifest, &seed_path, surfaces.len()),
+    )?;
+
+    let (program, args) = agent_command(runner, &context_dir, &prompt_path, &seed_path);
+    let mut command = Command::new(&program);
+    command
+        .args(&args)
+        .env("NO_COLOR", "1")
+        .env("CI", "1")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let command_line = std::iter::once(program.clone())
+        .chain(args.iter().cloned())
+        .collect::<Vec<_>>();
+
+    let mut receipt = base_receipt;
+    receipt.mode = "isolated-agent-advisory-pass".to_string();
+    receipt.command = command_line;
+    receipt.prompt_path = Some(path_relative_to(out_dir, &prompt_path));
+    receipt.transcript_path = Some(path_relative_to(out_dir, &transcript_path));
+
+    let mut child = match command.spawn() {
+        Ok(child) => child,
+        Err(source) => {
+            receipt.status = "agent_unavailable_local_fallback".to_string();
+            receipt
+                .warnings
+                .push(format!("spawn {} failed: {source}", runner.as_str()));
+            write_string(
+                &transcript_path,
+                &format!("agent spawn failed for {}: {source}\n", runner.as_str()),
+            )?;
+            return Ok(receipt);
+        }
+    };
+
+    let status = match child
+        .wait_timeout(Duration::from_millis(DEFAULT_AGENT_TIMEOUT_MS))
+        .map_err(|source| AllieError::Io {
+            context: format!("wait for {} map agent", runner.as_str()),
+            source,
+        })? {
+        Some(status) => status,
+        None => {
+            let _ = child.kill();
+            let output = child.wait_with_output().map_err(|source| AllieError::Io {
+                context: format!("collect timed out {} map agent output", runner.as_str()),
+                source,
+            })?;
+            receipt.status = "agent_timeout_local_fallback".to_string();
+            receipt.warnings.push(format!(
+                "{} exceeded {} ms; deterministic local map was kept",
+                runner.as_str(),
+                DEFAULT_AGENT_TIMEOUT_MS
+            ));
+            write_agent_transcript(&transcript_path, &receipt.command, None, &output)?;
+            return Ok(receipt);
+        }
+    };
+    let output = child.wait_with_output().map_err(|source| AllieError::Io {
+        context: format!("collect {} map agent output", runner.as_str()),
+        source,
+    })?;
+    if status.success() {
+        receipt.status = "agent_advisory_completed".to_string();
+    } else {
+        receipt.status = "agent_failed_local_fallback".to_string();
+        receipt.warnings.push(format!(
+            "{} exited with {}; deterministic local map was kept",
+            runner.as_str(),
+            status
+        ));
+    }
+    write_agent_transcript(&transcript_path, &receipt.command, Some(status), &output)?;
+    Ok(receipt)
+}
+
+fn agent_command(
+    runner: AgentRunnerKind,
+    context_dir: &Path,
+    prompt_path: &Path,
+    seed_path: &Path,
+) -> (String, Vec<String>) {
+    match runner {
+        AgentRunnerKind::Local => ("true".to_string(), Vec::new()),
+        AgentRunnerKind::OpenCode => (
+            "opencode".to_string(),
+            vec![
+                "run".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
+                "--dir".to_string(),
+                context_dir.to_string_lossy().to_string(),
+                format!(
+                    "Review `{}` and `{}` in this directory. Return concise JSON with missing surfaces, workflows, and WCAG review hypotheses. Do not edit files.",
+                    prompt_path
+                        .file_name()
+                        .and_then(|value| value.to_str())
+                        .unwrap_or("agent-map-prompt.md"),
+                    seed_path
+                        .file_name()
+                        .and_then(|value| value.to_str())
+                        .unwrap_or("map-seed.json")
+                ),
+            ],
+        ),
+        AgentRunnerKind::Omp => (
+            "omp".to_string(),
+            vec![
+                "-p".to_string(),
+                "--mode".to_string(),
+                "json".to_string(),
+                "--max-time".to_string(),
+                (DEFAULT_AGENT_TIMEOUT_MS / 1000).to_string(),
+                "--no-session".to_string(),
+                "--cwd".to_string(),
+                context_dir.to_string_lossy().to_string(),
+                format!("@{}", prompt_path.to_string_lossy()),
+                format!("@{}", seed_path.to_string_lossy()),
+            ],
+        ),
+    }
+}
+
+fn write_agent_transcript(
+    path: &Path,
+    command: &[String],
+    status: Option<std::process::ExitStatus>,
+    output: &std::process::Output,
+) -> Result<()> {
+    let contents = format!(
+        "command: {}\nstatus: {}\n\nstdout:\n{}\n\nstderr:\n{}\n",
+        command.join(" "),
+        status
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "timeout".to_string()),
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    write_string(path, &contents)
+}
+
+fn agent_map_prompt(manifest: &FlowManifest, seed_path: &Path, surface_count: usize) -> String {
+    format!(
+        "# Allie Agent Map Review\n\nYou are Allie, an accessibility evidence agent. Inspect the attached map seed at `{}` for `{}`. Return JSON only with keys `missing_surfaces`, `missing_workflows`, `wcag_review_hypotheses`, and `reporting_notes`.\n\nConstraints:\n- Do not edit files.\n- Do not claim legal compliance.\n- Treat deterministic axe/playwright evidence as stronger than model-only judgment.\n- Recommend agentic or human review where the evidence requires visual, assistive-technology, content, or workflow judgment.\n\nSeed surface count: {}.\n",
+        seed_path.display(),
+        manifest.app_name,
+        surface_count
+    )
+}
+
+fn agent_runner_capabilities(runner: AgentRunnerKind) -> Vec<String> {
+    match runner {
+        AgentRunnerKind::Local => vec![
+            "manifest-state-normalization".to_string(),
+            "static-html-surface-discovery".to_string(),
+            "wcag-profile-linkage".to_string(),
+        ],
+        AgentRunnerKind::OpenCode => vec![
+            "headless-opencode-run".to_string(),
+            "custom-agent-compatible".to_string(),
+            "session-transcript-capture".to_string(),
+            "isolated-advisory-context".to_string(),
+        ],
+        AgentRunnerKind::Omp => vec![
+            "interactive-or-print-agent".to_string(),
+            "vision-capable-model-routing".to_string(),
+            "json-output-mode".to_string(),
+            "isolated-advisory-context".to_string(),
+        ],
+    }
+}
+
+fn agent_runner_sources(runner: AgentRunnerKind) -> Vec<String> {
+    let mut sources = vec![
+        "https://www.w3.org/WAI/WCAG22/wcag.json".to_string(),
+        "https://www.w3.org/WAI/test-evaluate/".to_string(),
+    ];
+    match runner {
+        AgentRunnerKind::OpenCode => {
+            sources.push("https://opencode.ai/docs/cli/".to_string());
+            sources.push("https://opencode.ai/docs/server/".to_string());
+        }
+        AgentRunnerKind::Omp => {
+            sources.push("local:omp --help".to_string());
+        }
+        AgentRunnerKind::Local => {}
+    }
+    sources
+}
+
+fn product_surfaces(
+    manifest: &FlowManifest,
+    manifest_path: &Path,
+    project_root: &Path,
+) -> Result<Vec<ProductSurface>> {
+    let mut surfaces: BTreeMap<String, ProductSurface> = BTreeMap::new();
+    for discovered in discover_surfaces(manifest, manifest_path)? {
+        let route = discovered.route.clone();
+        merge_product_surface(
+            &mut surfaces,
+            route.clone(),
+            ProductSurface {
+                id: discovered.id,
+                title: discovered.title,
+                routes: vec![route.clone()],
+                files: Vec::new(),
+                services: vec![service_label_for_target(&manifest.target)],
+                user_stories: discovered.user_stories,
+                workflow_refs: vec![manifest.flow.id.clone()],
+                evidence_refs: manifest
+                    .flow
+                    .states
+                    .iter()
+                    .filter(|state| state.path == route)
+                    .map(|state| state.id.clone())
+                    .collect(),
+                confidence: discovered.confidence,
+                review_status: "generated_needs_operator_review".to_string(),
+                provenance: discovered.provenance,
+            },
+        );
+    }
+
+    for html_path in project_html_files(project_root)? {
+        let route = route_for_project_file(project_root, &html_path);
+        let title = html_title(&html_path).unwrap_or_else(|| route_to_id(&route));
+        let relative = path_relative_to(project_root, &html_path);
+        merge_product_surface(
+            &mut surfaces,
+            route.clone(),
+            ProductSurface {
+                id: route_to_id(&route),
+                title,
+                routes: vec![route.clone()],
+                files: vec![relative.clone()],
+                services: vec!["static-html".to_string()],
+                user_stories: vec![format!("As an application user, I can reach {}", relative)],
+                workflow_refs: vec![manifest.flow.id.clone()],
+                evidence_refs: manifest
+                    .flow
+                    .states
+                    .iter()
+                    .filter(|state| state.path == route)
+                    .map(|state| state.id.clone())
+                    .collect(),
+                confidence: "repo_static_scan".to_string(),
+                review_status: "generated_needs_operator_review".to_string(),
+                provenance: vec![html_path.to_string_lossy().to_string()],
+            },
+        );
+    }
+
+    Ok(surfaces.into_values().collect())
+}
+
+fn merge_product_surface(
+    surfaces: &mut BTreeMap<String, ProductSurface>,
+    route: String,
+    incoming: ProductSurface,
+) {
+    if let Some(existing) = surfaces.get_mut(&route) {
+        if existing.title == existing.id && incoming.title != incoming.id {
+            existing.title = incoming.title;
+        }
+        extend_unique(&mut existing.routes, incoming.routes);
+        extend_unique(&mut existing.files, incoming.files);
+        extend_unique(&mut existing.services, incoming.services);
+        extend_unique(&mut existing.user_stories, incoming.user_stories);
+        extend_unique(&mut existing.workflow_refs, incoming.workflow_refs);
+        extend_unique(&mut existing.evidence_refs, incoming.evidence_refs);
+        extend_unique(&mut existing.provenance, incoming.provenance);
+        if existing.confidence != "operator_supplied" {
+            existing.confidence = incoming.confidence;
+        }
+    } else {
+        surfaces.insert(route, incoming);
+    }
+}
+
+fn extend_unique(target: &mut Vec<String>, incoming: Vec<String>) {
+    let mut seen = target.iter().cloned().collect::<BTreeSet<_>>();
+    for item in incoming {
+        if seen.insert(item.clone()) {
+            target.push(item);
+        }
+    }
+}
+
+fn service_label_for_target(target: &ManifestTarget) -> String {
+    match target.kind.as_str() {
+        "local_fixture" => "local-fixture".to_string(),
+        "static" => "static-site".to_string(),
+        "web" => "web-app".to_string(),
+        other => other.to_string(),
+    }
+}
+
+fn project_html_files(root: &Path) -> Result<Vec<PathBuf>> {
+    html_files_with_filter(root, true)
+}
+
+fn html_files_with_filter(root: &Path, skip_generated: bool) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for entry in fs::read_dir(&dir).map_err(|source| AllieError::Io {
+            context: format!("read html directory {}", dir.display()),
+            source,
+        })? {
+            let entry = entry.map_err(|source| AllieError::Io {
+                context: format!("read html entry {}", dir.display()),
+                source,
+            })?;
+            let path = entry.path();
+            if path.is_dir() {
+                if skip_generated && should_skip_project_dir(&path) {
+                    continue;
+                }
+                stack.push(path);
+            } else if path.extension().and_then(|value| value.to_str()) == Some("html") {
+                files.push(path);
+            }
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+fn should_skip_project_dir(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|value| value.to_str()) else {
+        return false;
+    };
+    matches!(
+        name,
+        ".git"
+            | ".allie"
+            | ".next"
+            | "build"
+            | "coverage"
+            | "dist"
+            | "docs"
+            | "explore"
+            | "node_modules"
+            | "target"
+    )
+}
+
+fn route_for_project_file(root: &Path, path: &Path) -> String {
+    let relative = path.strip_prefix(root).unwrap_or(path);
+    if relative == Path::new("index.html") {
+        return "/".to_string();
+    }
+    if relative.file_name() == Some(std::ffi::OsStr::new("index.html")) {
+        let parent = relative.parent().unwrap_or_else(|| Path::new(""));
+        let parent = parent.to_string_lossy().replace('\\', "/");
+        return if parent.is_empty() {
+            "/".to_string()
+        } else {
+            format!("/{parent}/")
+        };
+    }
+    format!("/{}", relative.to_string_lossy().replace('\\', "/"))
+}
+
+fn standards_profile_summary(policy_profile: &str) -> StandardsProfileSummary {
+    if policy_profile != "wcag22-aa" {
+        return StandardsProfileSummary {
+            id: policy_profile.to_string(),
+            source_urls: Vec::new(),
+            total_obligations: 0,
+            methods: BTreeMap::new(),
+        };
+    }
+    let mut methods = BTreeMap::new();
+    for criterion in wcag22_success_criteria() {
+        let method = criterion["method"].as_str().unwrap_or("unknown");
+        *methods.entry(method.to_string()).or_insert(0) += 1;
+    }
+    StandardsProfileSummary {
+        id: "wcag22-aa".to_string(),
+        source_urls: vec![
+            wcag22_profile()["source_url"]
+                .as_str()
+                .unwrap_or("https://www.w3.org/WAI/WCAG22/wcag.json")
+                .to_string(),
+            "https://www.w3.org/TR/WCAG22/".to_string(),
+            "https://www.w3.org/WAI/test-evaluate/conformance/wcag-em/".to_string(),
+        ],
+        total_obligations: wcag22_success_criteria().len(),
+        methods,
+    }
+}
+
+fn product_map_open_questions(manifest: &FlowManifest) -> Vec<String> {
+    let mut questions = Vec::new();
+    if manifest.model.enabled {
+        questions.push(
+            "Confirm provider, ZDR, and artifact redaction policy before sending screenshots or DOM captures to model review."
+                .to_string(),
+        );
+    } else {
+        questions.push(
+            "Model review is disabled in the manifest; human or agentic review findings remain uncollected until review runs."
+                .to_string(),
+        );
+    }
+    questions.push(
+        "Verify generated user stories and workflow names with the application owner before using them as release blockers."
+            .to_string(),
+    );
+    questions
+}
+
+fn generated_flow_manifest(manifest: &FlowManifest, surfaces: &[ProductSurface]) -> FlowManifest {
+    let mut generated = manifest.clone();
+    generated.id = format!("{}-allie-generated", manifest.id);
+    generated.name = format!("{} Allie generated product-surface flow", manifest.app_name);
+    generated.flow.id = "allie-generated-product-surface-flow".to_string();
+    generated.flow.description =
+        "Generated from the Allie product map. Replay before enforcement.".to_string();
+    generated.flow.states = surfaces
+        .iter()
+        .flat_map(|surface| {
+            surface.routes.iter().map(move |route| ManifestState {
+                id: surface.id.clone(),
+                path: route.clone(),
+                description: surface.title.clone(),
+                required: true,
+                axe: true,
+                screenshot: true,
+                dom_snapshot: true,
+                accessibility_tree: true,
+                keyboard: true,
+                video: false,
+                trace: true,
+                promotion_state: Some("generated_candidate".to_string()),
+            })
+        })
+        .collect();
+    generated
+}
+
+fn render_product_surface_map(map: &ProductMapPacket) -> String {
+    let surfaces = map
+        .surfaces
+        .iter()
+        .map(|surface| {
+            format!(
+                "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                escape_html(&surface.id),
+                escape_html(&surface.title),
+                escape_html(&surface.routes.join(", ")),
+                escape_html(&surface.files.join(", ")),
+                escape_html(&surface.confidence),
+                escape_html(&surface.user_stories.join(" "))
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    let workflows = map
+        .workflows
+        .iter()
+        .map(|workflow| {
+            format!(
+                "<li><strong>{}</strong><br>{}<br><code>{}</code></li>",
+                escape_html(&workflow.title),
+                escape_html(&workflow.user_story),
+                escape_html(&workflow.generated_flow_manifest)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    let questions = map
+        .open_questions
+        .iter()
+        .map(|question| format!("<li>{}</li>", escape_html(question)))
+        .collect::<Vec<_>>()
+        .join("");
+    format!(
+        r#"<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Allie Product Map</title>
+  <style>
+    body {{ margin: 0; color: #151719; background: #f5f7fa; font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    main {{ width: min(100% - 40px, 1120px); margin: 0 auto; padding: 40px 0; }}
+    h1 {{ margin: 0 0 8px; font-size: 42px; line-height: 1.05; letter-spacing: 0; }}
+    h2 {{ margin: 0 0 12px; color: #58616c; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }}
+    section {{ background: #fff; border: 1px solid #d7dde5; margin-top: 18px; padding: 20px; }}
+    table {{ width: 100%; border-collapse: collapse; }}
+    th, td {{ border-bottom: 1px solid #d7dde5; padding: 10px; text-align: left; vertical-align: top; }}
+    th {{ color: #58616c; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }}
+    code {{ background: #edf1f6; padding: 0.08em 0.28em; border-radius: 4px; }}
+    @media (max-width: 760px) {{ main {{ width: min(100% - 24px, 1120px); }} table {{ display: block; overflow-x: auto; }} }}
+  </style>
+</head>
+<body>
+  <main>
+    <p>Allie generated product map, not a legal compliance guarantee</p>
+    <h1>{app_name}</h1>
+    <p>Source manifest <code>{manifest}</code>. Agent runner <code>{runner}</code> status <code>{runner_status}</code>.</p>
+    <section>
+      <h2>Surfaces</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Title</th><th>Routes</th><th>Files</th><th>Confidence</th><th>User Stories</th></tr></thead>
+        <tbody>{surfaces}</tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Workflows</h2>
+      <ul>{workflows}</ul>
+    </section>
+    <section>
+      <h2>Standards Profile</h2>
+      <p><code>{profile}</code> contains {total} WCAG A/AA success criteria obligations for this report.</p>
+    </section>
+    <section>
+      <h2>Open Review Questions</h2>
+      <ul>{questions}</ul>
+    </section>
+  </main>
+</body>
+</html>
+"#,
+        app_name = escape_html(&map.app_name),
+        manifest = escape_html(&map.source_manifest),
+        runner = escape_html(&map.agent.runner),
+        runner_status = escape_html(&map.agent.status),
+        surfaces = surfaces,
+        workflows = workflows,
+        profile = escape_html(&map.standards.id),
+        total = map.standards.total_obligations,
+        questions = questions
+    )
+}
+
+fn run_compliance_report(options: ReportOptions) -> Result<ComplianceReportReceipt> {
+    fs::create_dir_all(&options.out_dir).map_err(|source| AllieError::Io {
+        context: format!(
+            "create compliance report output directory {}",
+            options.out_dir.display()
+        ),
+        source,
+    })?;
+    let map: ProductMapPacket = read_json_file(&options.map_path)?;
+    if map.schema != PRODUCT_MAP_SCHEMA {
+        return Err(AllieError::InvalidManifest(format!(
+            "invalid product map schema {}; expected {PRODUCT_MAP_SCHEMA}",
+            map.schema
+        )));
+    }
+    let packet: EvidencePacket = read_json_file(&options.packet_path)?;
+    validate_release_packet(&packet)?;
+    let report = build_compliance_report(&map, &packet, &options.map_path, &options.packet_path);
+
+    let report_json_path = options.out_dir.join("compliance-report.json");
+    let report_html_path = options.out_dir.join("compliance-report.html");
+    let summary_path = options.out_dir.join("summary.md");
+    write_json_pretty(&report_json_path, &report)?;
+    write_string(&report_html_path, &render_compliance_report(&report))?;
+    write_string(&summary_path, &render_compliance_summary(&report))?;
+
+    Ok(ComplianceReportReceipt {
+        report_json_path,
+        report_html_path,
+        summary_path,
+    })
+}
+
+fn build_compliance_report(
+    map: &ProductMapPacket,
+    packet: &EvidencePacket,
+    map_path: &Path,
+    packet_path: &Path,
+) -> ComplianceReportPacket {
+    let obligations = compliance_obligation_order(&map.policy_profile, packet)
+        .into_iter()
+        .map(|obligation| compliance_obligation(map, packet, &obligation))
+        .collect::<Vec<_>>();
+    let summary = compliance_summary(packet, &obligations);
+    let surfaces = map
+        .surfaces
+        .iter()
+        .map(|surface| compliance_surface_report(surface, packet, &obligations))
+        .collect();
+    ComplianceReportPacket {
+        schema: COMPLIANCE_REPORT_SCHEMA.to_string(),
+        generated_at: now_utc().to_rfc3339(),
+        source_map: map_path.to_string_lossy().to_string(),
+        source_packet: packet_path.to_string_lossy().to_string(),
+        app_name: map.app_name.clone(),
+        summary,
+        obligations,
+        surfaces,
+    }
+}
+
+fn compliance_obligation_order(policy_profile: &str, packet: &EvidencePacket) -> Vec<String> {
+    let mut obligations = Vec::new();
+    let mut seen = BTreeSet::new();
+    if policy_profile == "wcag22-aa" {
+        for criterion in wcag22_success_criteria() {
+            if let Some(obligation) = criterion["obligation"].as_str()
+                && seen.insert(obligation.to_string())
+            {
+                obligations.push(obligation.to_string());
+            }
+        }
+    }
+    for obligation in std::iter::once(deterministic_pass_obligation(policy_profile))
+        .chain(scripted_profile_obligations(policy_profile))
+        .chain(human_review_profile_obligations(policy_profile))
+    {
+        if seen.insert(obligation.clone()) {
+            obligations.push(obligation);
+        }
+    }
+    for verdict in &packet.verdicts {
+        if seen.insert(verdict.obligation.clone()) {
+            obligations.push(verdict.obligation.clone());
+        }
+    }
+    for finding in &packet.findings {
+        if seen.insert(finding.standard_obligation.clone()) {
+            obligations.push(finding.standard_obligation.clone());
+        }
+    }
+    obligations
+}
+
+fn compliance_obligation(
+    map: &ProductMapPacket,
+    packet: &EvidencePacket,
+    obligation: &str,
+) -> ComplianceObligation {
+    let verdicts = packet
+        .verdicts
+        .iter()
+        .filter(|verdict| verdict.obligation == obligation)
+        .collect::<Vec<_>>();
+    let findings = related_findings(packet, obligation, &verdicts);
+    let status = compliance_status(&verdicts, &findings);
+    let surfaces = obligation_surface_ids(map, &verdicts, &findings);
+    let tests = unique_strings(
+        verdicts
+            .iter()
+            .map(|verdict| verdict.source.clone())
+            .chain(findings.iter().map(|finding| finding.source.clone())),
+    );
+    let artifact_refs = obligation_artifact_refs(packet, &verdicts, &findings);
+    let agentic_context = obligation_agentic_context(map, packet, &findings);
+    let confidence = verdicts
+        .iter()
+        .map(|verdict| verdict.confidence.clone())
+        .chain(findings.iter().map(|finding| finding.confidence.clone()))
+        .next()
+        .unwrap_or_else(|| "not_observed".to_string());
+    let evidence_class = verdicts
+        .iter()
+        .map(|verdict| verdict.evidence_class.clone())
+        .chain(
+            findings
+                .iter()
+                .map(|finding| finding.evidence_class.clone()),
+        )
+        .next()
+        .unwrap_or_else(|| "none".to_string());
+    ComplianceObligation {
+        id: obligation.to_string(),
+        title: criterion_title(obligation),
+        status: status.clone(),
+        why: obligation_why(obligation, &status, &verdicts, &findings),
+        surfaces,
+        tests,
+        artifact_refs,
+        agentic_context,
+        human_review: human_review_status(&status, &evidence_class),
+        confidence,
+        evidence_class,
+        source_url: criterion_source_url(obligation),
+        finding_refs: findings.iter().map(|finding| finding.id.clone()).collect(),
+    }
+}
+
+fn related_findings<'a>(
+    packet: &'a EvidencePacket,
+    obligation: &str,
+    verdicts: &[&Verdict],
+) -> Vec<&'a Finding> {
+    let finding_refs = verdicts
+        .iter()
+        .flat_map(|verdict| verdict.finding_refs.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    packet
+        .findings
+        .iter()
+        .filter(|finding| {
+            finding.standard_obligation == obligation || finding_refs.contains(&finding.id)
+        })
+        .collect()
+}
+
+fn compliance_status(verdicts: &[&Verdict], findings: &[&Finding]) -> String {
+    if findings.iter().any(|finding| finding.status == "fail")
+        || verdicts.iter().any(|verdict| verdict.status == "fail")
+    {
+        "fail".to_string()
+    } else if findings
+        .iter()
+        .any(|finding| finding.status == "needs_review")
+        || verdicts
+            .iter()
+            .any(|verdict| verdict.status == "needs_review")
+    {
+        "needs_review".to_string()
+    } else if verdicts
+        .iter()
+        .any(|verdict| verdict.status == "not_applicable")
+    {
+        "not_applicable".to_string()
+    } else if verdicts.iter().any(|verdict| verdict.status == "pass") {
+        "pass".to_string()
+    } else {
+        "not_tested".to_string()
+    }
+}
+
+fn obligation_surface_ids(
+    map: &ProductMapPacket,
+    verdicts: &[&Verdict],
+    findings: &[&Finding],
+) -> Vec<String> {
+    let state_ids = verdicts
+        .iter()
+        .flat_map(|verdict| verdict.affected_states.iter().cloned())
+        .chain(
+            findings
+                .iter()
+                .map(|finding| finding.affected_state.clone()),
+        )
+        .collect::<BTreeSet<_>>();
+    let routes = findings
+        .iter()
+        .map(|finding| finding.affected_route.clone())
+        .collect::<BTreeSet<_>>();
+    let mut surface_ids = map
+        .surfaces
+        .iter()
+        .filter(|surface| {
+            surface
+                .evidence_refs
+                .iter()
+                .any(|state| state_ids.contains(state))
+                || surface.id.as_str() != "run" && state_ids.contains(&surface.id)
+                || surface.routes.iter().any(|route| routes.contains(route))
+        })
+        .map(|surface| surface.id.clone())
+        .collect::<Vec<_>>();
+    if surface_ids.is_empty() && !state_ids.is_empty() {
+        surface_ids = state_ids.into_iter().collect();
+    }
+    if surface_ids.is_empty() && !map.surfaces.is_empty() {
+        surface_ids = map
+            .surfaces
+            .iter()
+            .map(|surface| surface.id.clone())
+            .collect();
+    }
+    surface_ids.sort();
+    surface_ids.dedup();
+    surface_ids
+}
+
+fn obligation_artifact_refs(
+    packet: &EvidencePacket,
+    verdicts: &[&Verdict],
+    findings: &[&Finding],
+) -> Vec<String> {
+    let state_ids = verdicts
+        .iter()
+        .flat_map(|verdict| verdict.affected_states.iter().cloned())
+        .chain(
+            findings
+                .iter()
+                .map(|finding| finding.affected_state.clone()),
+        )
+        .collect::<BTreeSet<_>>();
+    let mut refs = findings
+        .iter()
+        .flat_map(|finding| finding.artifact_refs.iter().cloned())
+        .collect::<Vec<_>>();
+    refs.extend(
+        packet
+            .artifacts
+            .iter()
+            .filter(|artifact| {
+                artifact
+                    .related_flow_state
+                    .as_ref()
+                    .is_some_and(|state| state_ids.contains(state))
+            })
+            .map(|artifact| artifact.id.clone()),
+    );
+    unique_strings(refs)
+}
+
+fn obligation_agentic_context(
+    map: &ProductMapPacket,
+    packet: &EvidencePacket,
+    findings: &[&Finding],
+) -> Vec<String> {
+    let mut context = findings
+        .iter()
+        .filter(|finding| finding.evidence_class == "agentic")
+        .map(|finding| finding.id.clone())
+        .collect::<Vec<_>>();
+    context.extend(packet.review.iter().map(|review| review.id.clone()));
+    if let Some(transcript) = &map.agent.transcript_path {
+        context.push(format!("map-agent-transcript:{transcript}"));
+    }
+    unique_strings(context)
+}
+
+fn obligation_why(
+    obligation: &str,
+    status: &str,
+    verdicts: &[&Verdict],
+    findings: &[&Finding],
+) -> String {
+    if let Some(finding) = findings.first() {
+        return format!("{}: {}", finding.title, finding.description);
+    }
+    match status {
+        "pass" => format!(
+            "{} is marked pass by {}.",
+            criterion_title(obligation),
+            verdicts
+                .first()
+                .map(|verdict| verdict.source.as_str())
+                .unwrap_or("the evidence packet")
+        ),
+        "needs_review" => format!(
+            "{} requires visual, assistive-technology, workflow, or content judgment beyond deterministic automation.",
+            criterion_title(obligation)
+        ),
+        "not_tested" => format!(
+            "{} has no deterministic, scripted, agentic, or human-attested evidence in this packet.",
+            criterion_title(obligation)
+        ),
+        "not_applicable" => format!("{} was marked not applicable.", criterion_title(obligation)),
+        _ => format!("{} has status {}.", criterion_title(obligation), status),
+    }
+}
+
+fn human_review_status(status: &str, evidence_class: &str) -> String {
+    match (status, evidence_class) {
+        ("pass", "deterministic") | ("pass", "scripted") => {
+            "not_required_for_machine_evidence".to_string()
+        }
+        ("pass", _) => "attested_or_promoted".to_string(),
+        ("fail", _) => "required_for_remediation_signoff".to_string(),
+        ("needs_review", _) => "required".to_string(),
+        ("not_tested", _) => "required_before_claim".to_string(),
+        _ => "review_status_unknown".to_string(),
+    }
+}
+
+fn criterion_source_url(obligation: &str) -> Option<String> {
+    wcag22_success_criteria()
+        .into_iter()
+        .find(|criterion| criterion["obligation"].as_str() == Some(obligation))
+        .and_then(|criterion| criterion["source_url"].as_str().map(ToString::to_string))
+}
+
+fn compliance_summary(
+    packet: &EvidencePacket,
+    obligations: &[ComplianceObligation],
+) -> ComplianceSummary {
+    let pass = obligations
+        .iter()
+        .filter(|obligation| obligation.status == "pass")
+        .count();
+    let fail = obligations
+        .iter()
+        .filter(|obligation| obligation.status == "fail")
+        .count();
+    let needs_review = obligations
+        .iter()
+        .filter(|obligation| obligation.status == "needs_review")
+        .count();
+    let not_tested = obligations
+        .iter()
+        .filter(|obligation| obligation.status == "not_tested")
+        .count();
+    let not_applicable = obligations
+        .iter()
+        .filter(|obligation| obligation.status == "not_applicable")
+        .count();
+    let status = if packet.summary.status == "error" {
+        "error"
+    } else if fail > 0 {
+        "fail"
+    } else if needs_review > 0 || not_tested > 0 {
+        "needs_review"
+    } else {
+        "pass"
+    };
+    ComplianceSummary {
+        status: status.to_string(),
+        total_obligations: obligations.len(),
+        pass,
+        fail,
+        needs_review,
+        not_tested,
+        not_applicable,
+        evidence_packet_status: packet.summary.status.clone(),
+    }
+}
+
+fn compliance_surface_report(
+    surface: &ProductSurface,
+    packet: &EvidencePacket,
+    obligations: &[ComplianceObligation],
+) -> ComplianceSurfaceReport {
+    let obligation_ids = obligations
+        .iter()
+        .filter(|obligation| obligation.surfaces.contains(&surface.id))
+        .map(|obligation| obligation.id.clone())
+        .collect::<Vec<_>>();
+    let finding_refs = packet
+        .findings
+        .iter()
+        .filter(|finding| {
+            surface.evidence_refs.contains(&finding.affected_state)
+                || surface.routes.contains(&finding.affected_route)
+        })
+        .map(|finding| finding.id.clone())
+        .collect::<Vec<_>>();
+    let status = if obligations
+        .iter()
+        .filter(|obligation| obligation.surfaces.contains(&surface.id))
+        .any(|obligation| obligation.status == "fail")
+    {
+        "fail"
+    } else if obligations
+        .iter()
+        .filter(|obligation| obligation.surfaces.contains(&surface.id))
+        .any(|obligation| obligation.status == "needs_review" || obligation.status == "not_tested")
+    {
+        "needs_review"
+    } else {
+        "pass"
+    };
+    ComplianceSurfaceReport {
+        surface_id: surface.id.clone(),
+        title: surface.title.clone(),
+        routes: surface.routes.clone(),
+        status: status.to_string(),
+        obligations: obligation_ids,
+        finding_refs,
+    }
+}
+
+fn unique_strings(values: impl IntoIterator<Item = String>) -> Vec<String> {
+    let mut seen = BTreeSet::new();
+    let mut output = Vec::new();
+    for value in values {
+        if !value.trim().is_empty() && seen.insert(value.clone()) {
+            output.push(value);
+        }
+    }
+    output
+}
+
+fn render_compliance_report(report: &ComplianceReportPacket) -> String {
+    let obligations = report
+        .obligations
+        .iter()
+        .map(|obligation| {
+            format!(
+                "<tr class=\"status-{status}\"><td><code>{id}</code><br>{title}</td><td>{status}</td><td>{why}<details><summary>Evidence</summary><p>Surfaces: <code>{surfaces}</code></p><p>Tests: <code>{tests}</code></p><p>Artifacts: <code>{artifacts}</code></p><p>Agentic context: <code>{agentic}</code></p><p>Human review: {human}</p></details></td></tr>",
+                status = escape_html(&obligation.status),
+                id = escape_html(&obligation.id),
+                title = escape_html(&obligation.title),
+                why = escape_html(&obligation.why),
+                surfaces = escape_html(&obligation.surfaces.join(", ")),
+                tests = escape_html(&obligation.tests.join(", ")),
+                artifacts = escape_html(&obligation.artifact_refs.join(", ")),
+                agentic = escape_html(&obligation.agentic_context.join(", ")),
+                human = escape_html(&obligation.human_review)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    let surfaces = report
+        .surfaces
+        .iter()
+        .map(|surface| {
+            format!(
+                "<li><strong>{}</strong> <code>{}</code><br>Status: {}. Routes: <code>{}</code>. Findings: <code>{}</code>.</li>",
+                escape_html(&surface.title),
+                escape_html(&surface.surface_id),
+                escape_html(&surface.status),
+                escape_html(&surface.routes.join(", ")),
+                escape_html(&surface.finding_refs.join(", "))
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+    format!(
+        r#"<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Allie WCAG Evidence Report</title>
+  <style>
+    body {{ margin: 0; color: #151719; background: #f5f7fa; font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    main {{ width: min(100% - 40px, 1180px); margin: 0 auto; padding: 40px 0; }}
+    h1 {{ margin: 0 0 8px; font-size: 42px; line-height: 1.05; letter-spacing: 0; }}
+    h2 {{ margin: 0 0 12px; color: #58616c; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }}
+    section {{ background: #fff; border: 1px solid #d7dde5; margin-top: 18px; padding: 20px; }}
+    table {{ width: 100%; border-collapse: collapse; }}
+    th, td {{ border-bottom: 1px solid #d7dde5; padding: 10px; text-align: left; vertical-align: top; }}
+    th {{ color: #58616c; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }}
+    code {{ background: #edf1f6; padding: 0.08em 0.28em; border-radius: 4px; }}
+    details {{ margin-top: 8px; }}
+    .summary {{ display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: #d7dde5; border: 1px solid #d7dde5; margin-top: 22px; }}
+    .summary div {{ background: #fff; padding: 14px; }}
+    .label {{ color: #58616c; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }}
+    .value {{ font-size: 24px; font-weight: 700; margin: 0; }}
+    .status-fail td:first-child {{ border-left: 4px solid #b42318; }}
+    .status-needs_review td:first-child, .status-not_tested td:first-child {{ border-left: 4px solid #b7791f; }}
+    .status-pass td:first-child {{ border-left: 4px solid #2f855a; }}
+    @media (max-width: 760px) {{ main {{ width: min(100% - 24px, 1180px); }} .summary {{ grid-template-columns: 1fr 1fr; }} table {{ display: block; overflow-x: auto; }} }}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="label">Allie WCAG evidence report, not a legal compliance guarantee</p>
+    <h1>{app_name}</h1>
+    <p>Source packet <code>{packet}</code>. Source map <code>{map}</code>.</p>
+    <div class="summary" aria-label="Compliance evidence summary">
+      <div><p class="label">Status</p><p class="value">{status}</p></div>
+      <div><p class="label">Pass</p><p class="value">{pass}</p></div>
+      <div><p class="label">Fail</p><p class="value">{fail}</p></div>
+      <div><p class="label">Review</p><p class="value">{review}</p></div>
+      <div><p class="label">Not Tested</p><p class="value">{not_tested}</p></div>
+      <div><p class="label">Total</p><p class="value">{total}</p></div>
+    </div>
+    <section>
+      <h2>Surfaces</h2>
+      <ul>{surfaces}</ul>
+    </section>
+    <section>
+      <h2>WCAG 2.2 A/AA Obligations</h2>
+      <table>
+        <thead><tr><th>Requirement</th><th>Status</th><th>Why And Evidence</th></tr></thead>
+        <tbody>{obligations}</tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
+"#,
+        app_name = escape_html(&report.app_name),
+        packet = escape_html(&report.source_packet),
+        map = escape_html(&report.source_map),
+        status = escape_html(&report.summary.status),
+        pass = report.summary.pass,
+        fail = report.summary.fail,
+        review = report.summary.needs_review,
+        not_tested = report.summary.not_tested,
+        total = report.summary.total_obligations,
+        surfaces = surfaces,
+        obligations = obligations
+    )
+}
+
+fn render_compliance_summary(report: &ComplianceReportPacket) -> String {
+    let failing = report
+        .obligations
+        .iter()
+        .filter(|obligation| obligation.status == "fail")
+        .map(|obligation| format!("- {}: {}", obligation.id, obligation.why))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "# Allie WCAG Evidence Summary\n\nStatus: `{}`\n\nPass: {}. Fail: {}. Needs review: {}. Not tested: {}. Total obligations: {}.\n\nSource map: `{}`\nSource packet: `{}`\n\nThis report is evidence visibility for accessibility engineering review, not a legal compliance guarantee.\n\n## Failing Obligations\n\n{}\n",
+        report.summary.status,
+        report.summary.pass,
+        report.summary.fail,
+        report.summary.needs_review,
+        report.summary.not_tested,
+        report.summary.total_obligations,
+        report.source_map,
+        report.source_packet,
+        if failing.is_empty() {
+            "None.".to_string()
+        } else {
+            failing
+        }
+    )
 }
 
 fn discover_surfaces(
@@ -2046,6 +3486,121 @@ struct FlowCandidate {
     keyboard: bool,
     video: bool,
     trace: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ProductMapPacket {
+    schema: String,
+    generated_at: String,
+    source_manifest: String,
+    project_root: String,
+    app_name: String,
+    environment: String,
+    policy_profile: String,
+    target: ManifestTarget,
+    agent: AgentRunnerReceiptPacket,
+    standards: StandardsProfileSummary,
+    surfaces: Vec<ProductSurface>,
+    workflows: Vec<ProductWorkflow>,
+    open_questions: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct AgentRunnerReceiptPacket {
+    schema: String,
+    runner: String,
+    mode: String,
+    status: String,
+    capabilities: Vec<String>,
+    command: Vec<String>,
+    prompt_path: Option<String>,
+    transcript_path: Option<String>,
+    warnings: Vec<String>,
+    sources: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct StandardsProfileSummary {
+    id: String,
+    source_urls: Vec<String>,
+    total_obligations: usize,
+    methods: BTreeMap<String, usize>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ProductSurface {
+    id: String,
+    title: String,
+    routes: Vec<String>,
+    files: Vec<String>,
+    services: Vec<String>,
+    user_stories: Vec<String>,
+    workflow_refs: Vec<String>,
+    evidence_refs: Vec<String>,
+    confidence: String,
+    review_status: String,
+    provenance: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ProductWorkflow {
+    id: String,
+    title: String,
+    surface_refs: Vec<String>,
+    user_story: String,
+    generated_flow_manifest: String,
+    states: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ComplianceReportPacket {
+    schema: String,
+    generated_at: String,
+    source_map: String,
+    source_packet: String,
+    app_name: String,
+    summary: ComplianceSummary,
+    obligations: Vec<ComplianceObligation>,
+    surfaces: Vec<ComplianceSurfaceReport>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ComplianceSummary {
+    status: String,
+    total_obligations: usize,
+    pass: usize,
+    fail: usize,
+    needs_review: usize,
+    not_tested: usize,
+    not_applicable: usize,
+    evidence_packet_status: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ComplianceObligation {
+    id: String,
+    title: String,
+    status: String,
+    why: String,
+    surfaces: Vec<String>,
+    tests: Vec<String>,
+    artifact_refs: Vec<String>,
+    agentic_context: Vec<String>,
+    human_review: String,
+    confidence: String,
+    evidence_class: String,
+    source_url: Option<String>,
+    finding_refs: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct ComplianceSurfaceReport {
+    surface_id: String,
+    title: String,
+    routes: Vec<String>,
+    status: String,
+    obligations: Vec<String>,
+    finding_refs: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -3909,6 +5464,131 @@ mod tests {
     }
 
     #[test]
+    fn map_cli_writes_product_map_agent_receipt_and_generated_flow() {
+        let temp = tempdir().unwrap();
+        let site_dir = temp.path().join("site");
+        fs::create_dir_all(&site_dir).unwrap();
+        fs::write(
+            site_dir.join("index.html"),
+            "<!doctype html><html><head><title>Vanity Test</title></head><body><main>hello</main></body></html>",
+        )
+        .unwrap();
+        let manifest_path = write_static_manifest(temp.path(), "login-form");
+        let out_dir = temp.path().join("map");
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let code = run_cli_with_io(
+            vec![
+                "map".to_string(),
+                "--manifest".to_string(),
+                manifest_path.to_string_lossy().to_string(),
+                "--project-root".to_string(),
+                site_dir.to_string_lossy().to_string(),
+                "--out".to_string(),
+                out_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        assert!(out_dir.join("product-map.json").exists());
+        assert!(out_dir.join("surface-map.html").exists());
+        assert!(out_dir.join("agent-runner-receipt.json").exists());
+        assert!(out_dir.join("generated-flow.yml").exists());
+        let map: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(out_dir.join("product-map.json")).unwrap())
+                .unwrap();
+        assert_eq!(map["schema"], PRODUCT_MAP_SCHEMA);
+        assert_eq!(map["agent"]["runner"], "local");
+        assert_eq!(map["surfaces"][0]["files"][0], "index.html");
+        assert_eq!(map["standards"]["total_obligations"], 55);
+        let generated = fs::read_to_string(out_dir.join("generated-flow.yml")).unwrap();
+        assert!(generated.contains("allie-generated-product-surface-flow"));
+        assert!(generated.contains("promotion_state: generated_candidate"));
+    }
+
+    #[test]
+    fn report_cli_writes_wcag_drilldown_from_product_map_and_packet() {
+        let temp = tempdir().unwrap();
+        let site_dir = temp.path().join("site");
+        fs::create_dir_all(&site_dir).unwrap();
+        fs::write(
+            site_dir.join("index.html"),
+            "<!doctype html><html><head><title>Vanity Test</title></head><body><main>hello</main></body></html>",
+        )
+        .unwrap();
+        let manifest_path = write_static_manifest(temp.path(), "login-form");
+        let map_dir = temp.path().join("map");
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let code = run_cli_with_io(
+            vec![
+                "map".to_string(),
+                "--manifest".to_string(),
+                manifest_path.to_string_lossy().to_string(),
+                "--project-root".to_string(),
+                site_dir.to_string_lossy().to_string(),
+                "--out".to_string(),
+                map_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+
+        let packet_path = write_failing_evidence_packet(&temp.path().join("run"));
+        let report_dir = temp.path().join("report");
+        stdout.clear();
+        stderr.clear();
+        let code = run_cli_with_io(
+            vec![
+                "report".to_string(),
+                "--map".to_string(),
+                map_dir
+                    .join("product-map.json")
+                    .to_string_lossy()
+                    .to_string(),
+                "--packet".to_string(),
+                packet_path.to_string_lossy().to_string(),
+                "--out".to_string(),
+                report_dir.to_string_lossy().to_string(),
+            ],
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(code, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        assert!(report_dir.join("compliance-report.json").exists());
+        assert!(report_dir.join("compliance-report.html").exists());
+        assert!(report_dir.join("summary.md").exists());
+        let report: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(report_dir.join("compliance-report.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(report["schema"], COMPLIANCE_REPORT_SCHEMA);
+        assert_eq!(report["summary"]["status"], "fail");
+        let contrast = report["obligations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|obligation| obligation["id"] == "wcag22-aa:1.4.3-contrast-minimum")
+            .unwrap();
+        assert_eq!(contrast["status"], "fail");
+        assert!(
+            contrast["artifact_refs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|artifact| artifact == "screenshot-login-form")
+        );
+        let html = fs::read_to_string(report_dir.join("compliance-report.html")).unwrap();
+        assert!(html.contains("WCAG 2.2 A/AA Obligations"));
+        assert!(html.contains("not a legal compliance guarantee"));
+    }
+
+    #[test]
     fn review_cli_adds_agentic_context_without_blocking_release() {
         let temp = tempdir().unwrap();
         let packet_path = write_passing_evidence_packet(&temp.path().join("run"));
@@ -4295,6 +5975,52 @@ mod tests {
                 "zdr_required": true
             }
         })
+    }
+
+    fn write_static_manifest(root: &Path, state_id: &str) -> PathBuf {
+        let manifest_path = root.join("flow.yml");
+        fs::write(
+            &manifest_path,
+            format!(
+                r#"id: vanity-static-flow
+name: Vanity static flow
+app_name: Vanity
+environment: local
+target:
+  kind: web
+  base_url: http://127.0.0.1:4174
+policy:
+  profile: wcag22-aa
+  blocking_classes:
+    - deterministic
+browser:
+  viewport:
+    width: 1280
+    height: 720
+  color_scheme: light
+  reduced_motion: reduce
+  locale: en-US
+  zoom: 1.0
+flow:
+  id: vanity-home-flow
+  description: Vanity homepage
+  states:
+    - id: {state_id}
+      path: /
+      description: Vanity homepage
+      required: true
+      axe: true
+      screenshot: true
+      dom_snapshot: true
+      accessibility_tree: true
+      keyboard: true
+      video: false
+      trace: true
+"#
+            ),
+        )
+        .unwrap();
+        manifest_path
     }
 
     fn write_passing_evidence_packet(out_dir: &Path) -> PathBuf {
