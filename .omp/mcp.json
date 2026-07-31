@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "habitat": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        "export HABITAT_API_KEY=\"__mint.habitat.default__\" HABITAT_API_URL=\"http://mint.tail5f5eb4.ts.net:4949/proxy/https/habitat-r90tools.vercel.app\"; exec /Users/phaedrus/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node /Users/phaedrus/.local/share/habitat/mcp/server.mjs"
+      ]
+    },
+    "powder": {
+      "type": "http",
+      "url": "http://127.0.0.1:8105/mcp",
+      "enabled": false
+    }
+  }
+}
