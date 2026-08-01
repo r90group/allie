@@ -2,3 +2,4 @@
 /node_modules
 /.allie
 .DS_Store
+.omp/
