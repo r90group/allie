@@ -181,8 +181,8 @@ allowlist; with no key it scaffolds a model-off manifest instead.
   (fallback), probed in that order.
 - **Obtaining a key:** create an account at
   [openrouter.ai](https://openrouter.ai) and generate an API key, then export
-  it before initializing or re-initializing, for example
-  `export OPENROUTER_API_KEY="sk-or-..."` followed by `allie init --force`.
+  it before the first `allie init`, for example
+  `export OPENROUTER_API_KEY="sk-or-..."` followed by `allie init`.
   OpenRouter predisposes zero data retention (`zdr_required`), matching the
   default provider-routing policy.
 - **When the key is unset:** review runs model-off and nothing is billed. The
@@ -190,9 +190,11 @@ allowlist; with no key it scaffolds a model-off manifest instead.
   a `warn` status (model review is off: no resolvable API key found) with a fix
   hint naming the accepted environment variables. Criteria that depend on
   agentic review stay `needs_review` rather than receiving a terminal claim,
-  and the release projection never hard-blocks on model-only findings. Rerun
-  `allie init --force` after exporting a key to flip the scaffolded manifest
-  to model-enabled.
+  and the release projection never hard-blocks on model-only findings. A
+  re-run of `allie init --force` preserves an existing `model:` section rather
+  than flipping it; to switch a model-off manifest on, edit the `model:`
+  section directly — set `model.enabled: true`, `model.redaction: none`, and a
+  `model.provider_allowlist` entry (for example `- openrouter`).
 
 The key itself is read from the worker's environment at run time (`api_key_env`
 names the variable; the worker loads it by name). It never lands in

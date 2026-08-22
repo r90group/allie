@@ -1,6 +1,6 @@
 # Competitive Landscape
 
-Last reviewed: 2026-06-30
+Last reviewed: 2026-08-22
 
 ## Positioning Thesis
 
