@@ -66,8 +66,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      issues: write
-      pull-requests: write
     steps:
       - name: Download unsigned release inputs
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -142,14 +140,19 @@ jobs:
           gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false >/dev/null
           created=false
 
-      - name: Checkout history for Landmark
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+  landmark:
+    needs: sign-and-publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Synthesize release notes (Landmark)
-        uses: misty-step/landmark@v0
+      - uses: misty-step/landmark@a5869d7bc7a89febb47e2f73f49bdd8a75fa9309
         with:
           mode: synthesis-only
           healthcheck: "true"
