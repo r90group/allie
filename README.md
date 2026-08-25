@@ -121,7 +121,7 @@ runtime-smoked on Debian 12 before publication.
 set -eu
 release=v0.1.0
 archive=allie-linux-x64.tar.gz
-base="https://github.com/adminifi-ai/allie/releases/download/$release"
+base="https://github.com/r90group/allie/releases/download/$release"
 download=.allie/tooling/download
 mkdir -p "$download" .allie/tooling
 curl -fsSLo "$download/$archive" "$base/$archive"
@@ -138,7 +138,7 @@ curl -fsSLo "$download/$archive.sigstore.json" "$base/$archive.sigstore.json"
 )
 cosign verify-blob \
   --bundle "$download/$archive.sigstore.json" \
-  --certificate-identity "https://github.com/adminifi-ai/allie/.github/workflows/release.yml@refs/tags/$release" \
+  --certificate-identity "https://github.com/r90group/allie/.github/workflows/release.yml@refs/tags/$release" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$download/$archive"
 tar -xzf "$download/$archive" -C .allie/tooling
