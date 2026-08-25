@@ -139,3 +139,25 @@ jobs:
 
           gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false >/dev/null
           created=false
+
+  landmark:
+    needs: sign-and-publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: misty-step/landmark@a5869d7bc7a89febb47e2f73f49bdd8a75fa9309
+        with:
+          mode: synthesis-only
+          healthcheck: "true"
+          node-version: "24"
+          release-tag: ${{ github.ref_name }}
+          github-token: ${{ github.token }}
+          llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          changelog-source: auto

@@ -75,6 +75,34 @@ function validateReleaseWorkflow(text) {
     fail('sign-and-publish must have only contents:write and id-token:write');
   }
   if (publish.needs !== 'build-release') fail('sign-and-publish must consume only build-release');
+  const landmark = workflow.jobs?.landmark;
+  if (!landmark) fail('release workflow must run Landmark after sign-and-publish');
+  if (landmark.needs !== 'sign-and-publish') fail('landmark must consume only sign-and-publish');
+  exactKeys(landmark.permissions, ['contents', 'issues', 'pull-requests'], 'landmark permissions');
+  if (
+    landmark.permissions.contents !== 'write' ||
+    landmark.permissions.issues !== 'write' ||
+    landmark.permissions['pull-requests'] !== 'write'
+  ) {
+    fail('landmark must have contents/issues/pull-requests write without id-token');
+  }
+  if (Object.hasOwn(landmark.permissions, 'id-token')) fail('landmark must not mint OIDC signing credentials');
+  for (const step of (landmark.steps || []).filter((item) => item.uses)) {
+    if (!ACTION_SHA.test(step.uses)) fail(`landmark action is not pinned to a full SHA: ${step.uses}`);
+  }
+  const landmarkCheckout = (landmark.steps || []).find((step) => String(step.uses || '').startsWith('actions/checkout@'));
+  if (!landmarkCheckout || landmarkCheckout.with?.['persist-credentials'] !== false) {
+    fail('landmark checkout must set persist-credentials: false');
+  }
+  if (landmarkCheckout.with?.['fetch-depth'] !== 0) {
+    fail('landmark checkout must fetch full history');
+  }
+  const landmarkAction = (landmark.steps || []).find((step) => String(step.uses || '').startsWith('misty-step/landmark@'));
+  if (!landmarkAction) fail('landmark job must use misty-step/landmark pinned to a full SHA');
+  if (landmarkAction.with?.mode !== 'synthesis-only') fail('landmark job must be synthesis-only');
+  if (landmarkAction.with?.['release-tag'] !== '${{ github.ref_name }}') {
+    fail('landmark must synthesize the published tag');
+  }
 
   const allSteps = [...(build.steps || []), ...(publish.steps || [])];
   for (const step of allSteps.filter((item) => item.uses)) {

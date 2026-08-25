@@ -1,0 +1,17 @@
+product:
+  name: Allie
+  description: Allie is a Rust-first accessibility evidence harness and release intelligence
+audience: developer
+voice: clear, specific, user-facing
+changelog:
+  source: auto
+artifacts:
+  markdown: docs/releases/{version}.md
+  json: docs/releases/releases.json
+release:
+  profile: synthesis-only
+model:
+  policy: balanced
+budget:
+  max_input_tokens: 12000
+  max_output_tokens: 1200
