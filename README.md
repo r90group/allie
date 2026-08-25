@@ -136,9 +136,11 @@ curl -fsSLo "$download/$archive.sigstore.json" "$base/$archive.sigstore.json"
   fi
   awk -v archive="$archive" '$2 == archive' SHA256SUMS | sha256sum --check -
 )
+# v0.1.0 was signed when the GitHub owner was adminifi-ai. The Sigstore SAN
+# is that workflow identity. Later tags will use r90group.
 cosign verify-blob \
   --bundle "$download/$archive.sigstore.json" \
-  --certificate-identity "https://github.com/r90group/allie/.github/workflows/release.yml@refs/tags/$release" \
+  --certificate-identity "https://github.com/adminifi-ai/allie/.github/workflows/release.yml@refs/tags/$release" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$download/$archive"
 tar -xzf "$download/$archive" -C .allie/tooling
