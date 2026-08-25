@@ -116,12 +116,14 @@ release content:
 The current archive targets Linux x86-64 with glibc 2.35 or newer and is
 runtime-smoked on Debian 12 before publication.
 
+`v0.1.0` was signed when the GitHub owner was `adminifi-ai`. The Sigstore SAN
+is that workflow identity. Later tags will use `r90group`.
 
 ```sh
 set -eu
 release=v0.1.0
 archive=allie-linux-x64.tar.gz
-base="https://github.com/adminifi-ai/allie/releases/download/$release"
+base="https://github.com/r90group/allie/releases/download/$release"
 download=.allie/tooling/download
 mkdir -p "$download" .allie/tooling
 curl -fsSLo "$download/$archive" "$base/$archive"
