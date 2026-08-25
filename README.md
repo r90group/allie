@@ -116,6 +116,8 @@ release content:
 The current archive targets Linux x86-64 with glibc 2.35 or newer and is
 runtime-smoked on Debian 12 before publication.
 
+`v0.1.0` was signed when the GitHub owner was `adminifi-ai`. The Sigstore SAN
+is that workflow identity. Later tags will use `r90group`.
 
 ```sh
 set -eu
@@ -136,8 +138,6 @@ curl -fsSLo "$download/$archive.sigstore.json" "$base/$archive.sigstore.json"
   fi
   awk -v archive="$archive" '$2 == archive' SHA256SUMS | sha256sum --check -
 )
-# v0.1.0 was signed when the GitHub owner was adminifi-ai. The Sigstore SAN
-# is that workflow identity. Later tags will use r90group.
 cosign verify-blob \
   --bundle "$download/$archive.sigstore.json" \
   --certificate-identity "https://github.com/adminifi-ai/allie/.github/workflows/release.yml@refs/tags/$release" \
