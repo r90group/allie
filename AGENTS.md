@@ -48,3 +48,7 @@ Every meaningful change should state:
 - the exact product behavior or doc contract changed;
 - the command that verified it;
 - residual unverified paths.
+
+## Merging
+
+`master` requires the `verify` check and enforces it for admins. No approving review is required, so an agent PR merges on a green `verify` plus a model review: `gh pr merge --squash --match-head-commit <sha>`. Never use `--admin`; a block means `verify` is missing or red.
