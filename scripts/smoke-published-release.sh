@@ -48,18 +48,27 @@ unset OPENROUTER_API_KEY OPENAI_API_KEY ALLIE_BROWSER_WORKER ALLIE_AGENTIC_WORKE
 cd "$root/consumer"
 "$bundle/bin/allie" init --manifest .allie/manifest.yml \
   --app-name "Published Allie Smoke" --fixture-dir "$bundle/fixtures/login"
+git init -q
+git config user.email "allie-smoke@example.invalid"
+git config user.name "Allie Smoke"
+git add .allie/manifest.yml
+git commit -q -m "published consumer fixture manifest"
 "$bundle/bin/allie" doctor --manifest .allie/manifest.yml --out .allie/doctor
-"$bundle/bin/allie" verify --manifest .allie/manifest.yml --out .allie/verify/latest
+"$bundle/bin/allie" verify --manifest .allie/manifest.yml \
+  --project-root "$root/consumer" --out .allie/verify/latest
 "$bundle/bin/allie" publication --verify-root .allie/verify/latest --out .allie/public/latest
 node --input-type=module - "$tag" "$sha" <<'NODE'
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+const consumerSha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
 const evidence = JSON.parse(fs.readFileSync('.allie/verify/latest/run/evidence.json', 'utf8'));
 const receipt = JSON.parse(fs.readFileSync('.allie/public/latest/publication-receipt.json', 'utf8'));
 if (evidence.run.allie_version !== process.argv[2].slice(1) || evidence.summary.states_captured !== 1 ||
-    evidence.summary.infrastructure_failures !== 0 || receipt.status !== 'ready') {
+    evidence.run.git_sha !== consumerSha || evidence.summary.infrastructure_failures !== 0 || receipt.status !== 'ready') {
   throw new Error('Published binary failed the fixture verification/public-summary journey');
 }
 console.log(JSON.stringify({ event: 'allie.published_smoke', tag: process.argv[2], sha: process.argv[3],
   checksum: 'verified', signature: 'verified', artifact_identity: 'verified',
-  states_captured: evidence.summary.states_captured, infrastructure_failures: 0, publication: receipt.status }));
+  consumer_sha: consumerSha, states_captured: evidence.summary.states_captured,
+  infrastructure_failures: 0, publication: receipt.status }));
 NODE
