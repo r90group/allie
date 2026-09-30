@@ -29,6 +29,7 @@ cosign verify-blob \
   "$root/download/$archive"
 actual_sha=$(gh api "repos/$repo/commits/$tag" --jq .sha)
 [ "$actual_sha" = "$sha" ]
+unset GH_TOKEN GITHUB_TOKEN
 tar -xzf "$root/download/$archive" -C "$root"
 bundle="$root/allie"
 node --input-type=module - "$bundle/release.json" "$bundle/package.json" "$tag" "$sha" <<'NODE'

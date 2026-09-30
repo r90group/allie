@@ -25,10 +25,10 @@ explicit override for nonstandard layouts, not part of the normal consumer path.
 
 Every successful `ci` push run on `master` automatically publishes its exact
 revision as the signed Linux x64 bundle. The four source manifests/lockfiles agree
-on the pre-stable release line `0.<minor>.0`; `scripts/prepare-release.mjs` uses
-full first-parent history to stage a monotonic patch version before verification
-and packaging. The workflow creates the version tag itself. There is no manual
-tag, version-bump PR, or per-release approval in the routine path.
+on the pre-stable release line `0.<minor>.0`, validated by the PR gate. After
+the full source gate, `scripts/prepare-release.mjs` uses full first-parent history
+to stage a monotonic patch before packaging. The workflow creates its own tag.
+There is no manual tag, version-bump PR, or per-release approval in the routine path.
 
 The three downloaded assets are checked by the read-only `smoke-published` job:
 checksum, exact workflow signer, signed `release.json` version/SHA, and the real
@@ -45,13 +45,15 @@ GITHUB_REPOSITORY=r90group/allie scripts/smoke-published-release.sh "$tag" "$sha
 GitHub's `latest` release is the only update-channel pointer; there is no separate
 app updater manifest. Publication initially leaves the previous healthy pointer
 alone. Only a passing post-publication smoke advances it, with serialized
-promotion and an increasing-version check. A failed smoke makes the candidate
-prerelease and retains the last healthy release, without mutating consumer data
-or copies already installed outside this channel.
+promotion and an increasing-version check. A separate, non-coalesced job marks
+failed-smoke candidates prerelease and retains the last healthy release, without
+mutating consumer data or copies already installed outside this channel.
 
 For recovery from a later-discovered regression, select a previously verified
 release and point `latest` back to it; verify that release with the smoke command
 before promotion. This is incident recovery, not a routine release hand step.
+For historical `v0.1.0`, use its documented legacy signer from the README instead:
+it predates the signed `release.json` contract and the master-workflow identity.
 
 ```sh
 healthy_id=$(gh api "repos/r90group/allie/releases/tags/$healthy_tag" --jq .id)

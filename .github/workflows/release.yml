@@ -36,13 +36,13 @@ jobs:
 
       - run: npm ci
 
-      - name: Prepare coherent revision-derived release version
-        id: version
-        run: node scripts/prepare-release.mjs
-
       - run: npx playwright install --with-deps chromium
 
       - run: npm run verify
+
+      - name: Prepare coherent revision-derived release version
+        id: version
+        run: node scripts/prepare-release.mjs
 
       - run: scripts/package-release.sh dist
       - name: Verify archive on Debian 12
@@ -88,6 +88,16 @@ jobs:
         with:
           name: unsigned-release-bundle
           path: dist
+
+      - name: Check artifact identity before signing
+        env:
+          RELEASE_TAG: ${{ needs.build-release.outputs.tag }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          tar -xzOf dist/allie-linux-x64.tar.gz allie/release.json |
+            jq -e --arg version "${RELEASE_TAG#v}" --arg sha "$RELEASE_SHA" \
+              '.schema == "allie.distribution.v1" and .version == $version and .git_sha == $sha'
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -201,7 +211,7 @@ jobs:
 
   release-channel:
     needs: [build-release, sign-and-publish, smoke-published]
-    if: ${{ !cancelled() && needs.sign-and-publish.result == 'success' }}
+    if: ${{ needs.smoke-published.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -209,21 +219,14 @@ jobs:
       group: allie-release-channel
       cancel-in-progress: false
     steps:
-      - name: Promote healthy artifacts or retract the failed candidate
+      - name: Promote the healthy artifact channel
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_ID: ${{ needs.sign-and-publish.outputs.release_id }}
           RELEASE_TAG: ${{ needs.build-release.outputs.tag }}
-          SMOKE_RESULT: ${{ needs.smoke-published.result }}
         run: |
           set -euo pipefail
           latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
-          if [ "$SMOKE_RESULT" != success ]; then
-            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
-              -F prerelease=true -f make_latest=false >/dev/null
-            echo "::error::Published artifact smoke failed; latest remains $latest; $RELEASE_TAG is prerelease only"
-            exit 1
-          fi
           # A slower build of an older merge must not rewind the update channel.
           [[ "$latest" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
           IFS=. read -r _ minor patch <<< "$RELEASE_TAG"
@@ -237,3 +240,24 @@ jobs:
           else
             echo "Healthy $RELEASE_TAG published; newer or identical channel $latest retained"
           fi
+
+  retract-failed:
+    needs: [build-release, sign-and-publish, smoke-published]
+    if: >-
+      !cancelled() &&
+      needs.sign-and-publish.result == 'success' &&
+      needs.smoke-published.result != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Quarantine the failed published candidate without taking the promotion lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.sign-and-publish.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+            -F prerelease=true -f make_latest=false >/dev/null
+          echo "::error::Artifact smoke failed; candidate marked prerelease; healthy latest was never advanced"
+          exit 1

@@ -16,6 +16,10 @@ if (packages.length !== 1 || packages[0].version !== sourceVersion ||
     workerLock.packages[''].version !== sourceVersion) {
   throw new Error('Rust and browser-worker manifests and lockfiles must agree before release');
 }
+if (process.argv[2] === '--check') {
+  console.log(`Source release line validated: ${sourceVersion}`);
+  process.exit(0);
+}
 
 // Full first-parent history gives each default-branch revision a stable,
 // increasing patch without a version-bump commit or shared tag-allocation race.

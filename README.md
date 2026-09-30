@@ -156,10 +156,11 @@ and `npx playwright install chromium` in the Allie checkout once. The
 Allie releases stay on the pre-stable `v0.x` line. Every successful `ci` push run
 on `master` automatically builds and publishes its exact revision; no operator
 tag or release approval is needed. The source manifests and lockfiles agree on
-`0.<minor>.0`; CI derives the patch from the full first-parent commit count and
-stages that version in both Rust and browser-worker manifests/locks before the
-full gate and build. The signed archive includes `release.json` binding its
-version and source SHA. Only the reviewed source release line changes in Git;
+`0.<minor>.0`, checked on every PR. After the full source gate, CI derives the
+patch from the full first-parent commit count and stages it in both Rust and
+browser-worker manifests/locks before packaging. The signed archive includes
+`release.json` binding its version and source SHA. Only the reviewed source
+release line changes in Git;
 there are no bot version-bump commits.
 
 Builds have read-only credentials. The separate minimal OIDC signing job creates
