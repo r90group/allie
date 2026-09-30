@@ -1,14 +1,22 @@
 name: Allie release bundle
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [master]
 
 permissions: {}
 
 jobs:
   build-release:
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -16,6 +24,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
 
@@ -25,6 +35,10 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Prepare coherent revision-derived release version
+        id: version
+        run: node scripts/prepare-release.mjs
 
       - run: npx playwright install --with-deps chromium
 
@@ -66,6 +80,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    outputs:
+      release_id: ${{ steps.publish.outputs.release_id }}
     steps:
       - name: Download unsigned release inputs
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -84,11 +100,14 @@ jobs:
 
       - name: Publish only after exact asset readback
         shell: bash
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build-release.outputs.tag }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          tag="$GITHUB_REF_NAME"
+          tag="$RELEASE_TAG"
           [[ "$tag" =~ ^v0\.[0-9]+\.[0-9]+$ ]] || {
             echo "Release tag must match v0.x.y, got $tag" >&2
             exit 1
@@ -107,20 +126,35 @@ jobs:
           }
           trap cleanup EXIT
 
-          tag_commit=$(gh api "repos/$GITHUB_REPOSITORY/commits/$tag" --jq .sha)
-          if [ "$tag_commit" != "$GITHUB_SHA" ]; then
-            echo "Release tag $tag resolves to $tag_commit, expected $GITHUB_SHA" >&2
+
+          # GitHub may defer creating a draft's tag until publication. Bind it
+          # explicitly, without overwriting an existing ref on a retry.
+          tag_commit=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$tag" \
+            --jq '.[] | select(.ref == "refs/tags/" + env.RELEASE_TAG) | .object.sha')
+          if [ -z "$tag_commit" ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$tag" -f sha="$RELEASE_SHA" >/dev/null
+          elif [ "$tag_commit" != "$RELEASE_SHA" ]; then
+            echo "Refusing to overwrite $tag at $tag_commit" >&2
             exit 1
           fi
 
           release_id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" \
             -f tag_name="$tag" \
             -f name="$tag" \
+            -f target_commitish="$RELEASE_SHA" \
+            -f make_latest=false \
             -F draft=true \
             -F generate_release_notes=true \
             --jq .id)
           created=true
           test -n "$release_id"
+
+          tag_commit=$(gh api "repos/$GITHUB_REPOSITORY/commits/$tag" --jq .sha)
+          if [ "$tag_commit" != "$RELEASE_SHA" ]; then
+            echo "Release tag $tag resolves to $tag_commit, expected $RELEASE_SHA" >&2
+            exit 1
+          fi
 
           gh release upload "$tag" --repo "$GITHUB_REPOSITORY" \
             dist/allie-linux-x64.tar.gz \
@@ -137,5 +171,69 @@ jobs:
             exit 1
           fi
 
-          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false >/dev/null
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false -f make_latest=false >/dev/null
           created=false
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+  smoke-published:
+    needs: [build-release, sign-and-publish]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Verify and drive the downloaded signed release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build-release.outputs.tag }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          ALLIE_INSTALL_BROWSER_DEPS: "1"
+        run: scripts/smoke-published-release.sh "$RELEASE_TAG" "$RELEASE_SHA"
+
+  release-channel:
+    needs: [build-release, sign-and-publish, smoke-published]
+    if: ${{ !cancelled() && needs.sign-and-publish.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: allie-release-channel
+      cancel-in-progress: false
+    steps:
+      - name: Promote healthy artifacts or retract the failed candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.sign-and-publish.outputs.release_id }}
+          RELEASE_TAG: ${{ needs.build-release.outputs.tag }}
+          SMOKE_RESULT: ${{ needs.smoke-published.result }}
+        run: |
+          set -euo pipefail
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          if [ "$SMOKE_RESULT" != success ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+              -F prerelease=true -f make_latest=false >/dev/null
+            echo "::error::Published artifact smoke failed; latest remains $latest; $RELEASE_TAG is prerelease only"
+            exit 1
+          fi
+          # A slower build of an older merge must not rewind the update channel.
+          [[ "$latest" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
+          IFS=. read -r _ minor patch <<< "$RELEASE_TAG"
+          IFS=. read -r _ latest_minor latest_patch <<< "$latest"
+          if (( minor > latest_minor || (minor == latest_minor && patch > latest_patch) )); then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+              -f make_latest=true >/dev/null
+            observed=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+            [ "$observed" = "$RELEASE_TAG" ]
+            echo "Healthy update channel: $observed"
+          else
+            echo "Healthy $RELEASE_TAG published; newer or identical channel $latest retained"
+          fi

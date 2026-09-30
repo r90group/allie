@@ -34,6 +34,15 @@ cp -R workers "$BUNDLE/workers"
 cp -R fixtures/login "$BUNDLE/fixtures/login"
 cp package.json "$BUNDLE/package.json"
 cp package-lock.json "$BUNDLE/package-lock.json"
+ALLIE_RELEASE_SHA="$(git rev-parse HEAD)" node --input-type=module - "$BUNDLE/release.json" <<'NODE'
+import fs from 'node:fs';
+const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
+fs.writeFileSync(process.argv[2], JSON.stringify({
+  schema: 'allie.distribution.v1',
+  version,
+  git_sha: process.env.ALLIE_RELEASE_SHA,
+}, null, 2) + '\n');
+NODE
 cp -R node_modules "$BUNDLE/node_modules"
 
 PLAYWRIGHT_BROWSERS_PATH="$BUNDLE/ms-playwright" npx playwright install chromium --only-shell

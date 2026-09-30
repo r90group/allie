@@ -1,0 +1,16 @@
+name: alert-route-probe
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  route-probe:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit a deliberate failure for the agent triage route
+        run: |
+          echo '::error::alert-route-probe: deliberate delivery test; no product or release state changed'
+          exit 1
