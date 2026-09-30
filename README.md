@@ -116,19 +116,19 @@ release content:
 The current archive targets Linux x86-64 with glibc 2.35 or newer and is
 runtime-smoked on Debian 12 before publication.
 
-`v0.1.0` was signed when the GitHub owner was `adminifi-ai`. The Sigstore SAN
-is that workflow identity. Later tags will use `r90group`.
+Current releases are signed by the `r90group/allie` release workflow on `master`.
+The historical `v0.1.0` bundle instead has the exact signer identity
+`https://github.com/adminifi-ai/allie/.github/workflows/release.yml@refs/tags/v0.1.0`;
+use that identity only when explicitly installing that legacy release.
 
 ```sh
 set -eu
-release=v0.1.0
+release=$(gh api repos/r90group/allie/releases/latest --jq .tag_name)
 archive=allie-linux-x64.tar.gz
-base="https://github.com/r90group/allie/releases/download/$release"
 download=.allie/tooling/download
 mkdir -p "$download" .allie/tooling
-curl -fsSLo "$download/$archive" "$base/$archive"
-curl -fsSLo "$download/SHA256SUMS" "$base/SHA256SUMS"
-curl -fsSLo "$download/$archive.sigstore.json" "$base/$archive.sigstore.json"
+gh release download "$release" --repo r90group/allie --dir "$download" \
+  --pattern "$archive" --pattern SHA256SUMS --pattern "$archive.sigstore.json"
 (
   cd "$download"
   checksum_entries=$(awk -v archive="$archive" '$2 == archive { count++ } END { print count + 0 }' SHA256SUMS)
@@ -140,7 +140,7 @@ curl -fsSLo "$download/$archive.sigstore.json" "$base/$archive.sigstore.json"
 )
 cosign verify-blob \
   --bundle "$download/$archive.sigstore.json" \
-  --certificate-identity "https://github.com/adminifi-ai/allie/.github/workflows/release.yml@refs/tags/$release" \
+  --certificate-identity "https://github.com/r90group/allie/.github/workflows/release.yml@refs/heads/master" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "$download/$archive"
 tar -xzf "$download/$archive" -C .allie/tooling
@@ -153,13 +153,30 @@ allie publication --verify-root .allie/verify/latest --out .allie/public/latest
 When working from a source checkout instead of a release bundle, run `npm ci`
 and `npx playwright install chromium` in the Allie checkout once. The
 `ALLIE_BROWSER_WORKER` override remains available only for nonstandard layouts.
-Allie releases stay on the pre-stable `v0.x` line. A release operator pushes a
-version tag only after the matching version files are on a `master` commit whose
-`ci` run passed. The tag workflow reruns the full repository gate, builds the
-bundle, generates checksums, and passes only those named inputs to a minimal
-signing/publishing job. That job creates a draft with GitHub-generated notes,
-uploads the three exact expected assets, reads their names back through the
-GitHub API, and only then publishes; any failed draft is deleted.
+Allie releases stay on the pre-stable `v0.x` line. Every successful `ci` push run
+on `master` automatically builds and publishes its exact revision; no operator
+tag or release approval is needed. The source manifests and lockfiles agree on
+`0.<minor>.0`, checked on every PR. After the full source gate, CI derives the
+patch from the full first-parent commit count and stages it in both Rust and
+browser-worker manifests/locks before packaging. The signed archive includes
+`release.json` binding its version and source SHA. Only the reviewed source
+release line changes in Git;
+there are no bot version-bump commits.
+
+Builds have read-only credentials. The separate minimal OIDC signing job creates
+the matching tag automatically, generates GitHub notes, and publishes only the
+three named assets after exact API readback; failed drafts are deleted. A
+read-only post-publication job downloads those real assets, verifies the checksum,
+exact GitHub Actions signer, signed revision/version, and installed
+`init`/`doctor`/`verify`/`publication` journey using the bundled login fixture.
+Only then does a serialized promotion advance GitHub's `latest` release channel;
+an older build cannot rewind it. A failed smoke marks the candidate prerelease
+and leaves the previous healthy channel in place. This artifact-only product has
+no separate desktop updater manifest.
+
+Failed CI/release workflows reach the approved R90 GitHub webhook intake at
+`kaylee-alert-intake`, not a person's inbox. Recovery and the safe alert probe are
+documented in [the verification runbook](docs/verification.md#release-and-recovery).
 
 RustSec ignores live in `.cargo/audit.toml`; every ignored advisory must have
 one matching structured record in `.cargo/audit-waivers.toml` with

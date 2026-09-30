@@ -11,29 +11,74 @@ npm ci
 npx playwright install chromium
 ```
 
-In a consuming repository, install the release bundle and put its `bin`
-directory on `PATH`. The bundle keeps the Rust binary and browser worker assets
-together, so the CLI resolves the worker automatically.
-
-```sh
-mkdir -p .allie/tooling
-curl -fsSL https://github.com/adminifi-ai/allie/releases/latest/download/allie-linux-x64.tar.gz \
-  | tar -xz -C .allie/tooling
-export PATH="$PWD/.allie/tooling/allie/bin:$PATH"
-allie doctor --manifest .allie/manifest.yml --out .allie/doctor
-allie verify --manifest .allie/manifest.yml --out .allie/verify/latest
-allie publication --verify-root .allie/verify/latest --out .allie/public/latest
-```
+In a consuming repository, follow the [signed release installation procedure
+in the README](../README.md#consumer-contract), then put the bundle's `bin`
+directory on `PATH`. Checksum and exact Sigstore signer verification must pass
+before extraction. The bundle keeps the Rust binary, browser workers, Node
+dependencies, and browser cache together, so no source checkout is needed.
 
 For source-checkout development, run `npm ci` and `npx playwright install
 chromium` in the Allie checkout once. `ALLIE_BROWSER_WORKER` is still an
 explicit override for nonstandard layouts, not part of the normal consumer path.
-Allie releases stay on the pre-stable `v0.x` line. Push a version tag only for
-a `master` commit whose matching Rust and browser-worker version files are
-already committed and whose `ci` run passed. The tag triggers the bundle
-workflow, which reruns the full repository gate, builds the Linux archive used
-by the CI examples, generates GitHub release notes from merged history, signs
-the archive, and publishes only after exact asset readback.
+
+## Release and recovery
+
+Every successful `ci` push run on `master` automatically publishes its exact
+revision as the signed Linux x64 bundle. The four source manifests/lockfiles agree
+on the pre-stable release line `0.<minor>.0`, validated by the PR gate. After
+the full source gate, `scripts/prepare-release.mjs` uses full first-parent history
+to stage a monotonic patch before packaging. The workflow creates its own tag.
+There is no manual tag, version-bump PR, or per-release approval in the routine path.
+
+The three downloaded assets are checked by the read-only `smoke-published` job:
+checksum, exact workflow signer, signed `release.json` version/SHA, and the real
+installed fixture journey through `init`, `doctor`, `verify`, and `publication`.
+To repeat this outside CI, use an authorized native `gh` login, Node 22, Cosign,
+and the Playwright Chromium system dependencies:
+
+```sh
+tag=$(gh api repos/r90group/allie/releases/latest --jq .tag_name)
+sha=$(gh api "repos/r90group/allie/commits/$tag" --jq .sha)
+GITHUB_REPOSITORY=r90group/allie scripts/smoke-published-release.sh "$tag" "$sha"
+```
+
+GitHub's `latest` release is the only update-channel pointer; there is no separate
+app updater manifest. Publication initially leaves the previous healthy pointer
+alone. Only a passing post-publication smoke advances it, with serialized
+promotion and an increasing-version check. A separate, non-coalesced job marks
+failed-smoke candidates prerelease and retains the last healthy release, without
+mutating consumer data or copies already installed outside this channel.
+
+For recovery from a later-discovered regression, select a previously verified
+release and point `latest` back to it; verify that release with the smoke command
+before promotion. This is incident recovery, not a routine release hand step.
+For historical `v0.1.0`, use its documented legacy signer from the README instead:
+it predates the signed `release.json` contract and the master-workflow identity.
+
+```sh
+healthy_id=$(gh api "repos/r90group/allie/releases/tags/$healthy_tag" --jq .id)
+gh api --method PATCH "repos/r90group/allie/releases/$healthy_id" -f make_latest=true
+```
+
+### Incidents and alert delivery
+
+The existing signed GitHub webhook routes failed default-branch CI and release
+runs to `https://kaylee-alert-intake.misty-step.workers.dev/github/r90group`.
+Kaylee's agent triage consumes this route; do not add a human inbox or phone
+recipient. A real failure carries its workflow run URL, release/source context,
+and conclusion. Triage owns incident creation and repair; preserve signing,
+privacy, and data-loss boundaries during recovery.
+
+The dispatch-only `alert-route-probe.yml` deliberately fails a no-privilege job
+on `master`, with no product or release mutation. Its `alert-route-probe` marker
+lets triage recognize a delivery test. To drill the real route:
+
+```sh
+gh workflow run alert-route-probe.yml --repo r90group/allie --ref master
+```
+
+Record the failed run URL plus the intake receipt and triage handling in the PR
+or existing work record; a red Actions page alone is not delivery proof.
 
 Treat `.allie/verify/latest` as sensitive local evidence. It can contain
 authenticated DOM, screenshots, accessibility trees, traces, prompts, URLs,
