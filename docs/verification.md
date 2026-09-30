@@ -33,6 +33,9 @@ There is no manual tag, version-bump PR, or per-release approval in the routine 
 The three downloaded assets are checked by the read-only `smoke-published` job:
 checksum, exact workflow signer, signed `release.json` version/SHA, and the real
 installed fixture journey through `init`, `doctor`, `verify`, and `publication`.
+The smoke seeds a disposable committed Git consumer checkout and passes it as
+`--project-root`: Allie's evidence provenance requires a real consumer revision.
+The bundle's login fixture remains the target; no production/private data is used.
 To repeat this outside CI, use an authorized native `gh` login, Node 22, Cosign,
 and the Playwright Chromium system dependencies:
 
