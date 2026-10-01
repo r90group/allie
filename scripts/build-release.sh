@@ -16,6 +16,7 @@ tar -xzf "$dist/allie-linux-x64.tar.gz" -C "$root"
 # Preserve the actual Debian 12 minimum-runtime init proof without Node/browser
 # dependencies: this catches an incompatible native binary before publication.
 docker run --rm \
+  --user "$(id -u):$(id -g)" \
   -v "$root/allie:/opt/allie:ro" \
   -v "$root/work:/work" \
   -w /work \
