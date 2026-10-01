@@ -8,10 +8,11 @@ sha=${2:?usage: smoke-published-release.sh TAG SHA}
 [[ "$tag" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
 repo=${GITHUB_REPOSITORY:-r90group/allie}
+script_dir=$(cd "$(dirname "$0")" && pwd)
 root=$(mktemp -d "${TMPDIR:-/tmp}/allie-published-smoke.XXXXXX")
 trap 'rm -rf "$root"' EXIT
 archive=allie-linux-x64.tar.gz
-mkdir -p "$root/download" "$root/consumer"
+mkdir -p "$root/download"
 gh release download "$tag" --repo "$repo" --dir "$root/download" \
   --pattern "$archive" --pattern SHA256SUMS --pattern "$archive.sigstore.json"
 node --input-type=module - "$root/download/SHA256SUMS" <<'NODE'
@@ -31,44 +32,5 @@ actual_sha=$(gh api "repos/$repo/commits/$tag" --jq .sha)
 [ "$actual_sha" = "$sha" ]
 unset GH_TOKEN GITHUB_TOKEN
 tar -xzf "$root/download/$archive" -C "$root"
-bundle="$root/allie"
-node --input-type=module - "$bundle/release.json" "$bundle/package.json" "$tag" "$sha" <<'NODE'
-import fs from 'node:fs';
-const metadata = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
-const worker = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));
-if (metadata.schema !== 'allie.distribution.v1' || metadata.version !== process.argv[4].slice(1) ||
-    metadata.git_sha !== process.argv[5] || worker.version !== metadata.version) {
-  throw new Error('Signed artifact identity does not match the published revision and version');
-}
-NODE
-if [ "${ALLIE_INSTALL_BROWSER_DEPS:-0}" = 1 ]; then
-  "$bundle/node_modules/.bin/playwright" install-deps chromium
-fi
-unset OPENROUTER_API_KEY OPENAI_API_KEY ALLIE_BROWSER_WORKER ALLIE_AGENTIC_WORKER
-cd "$root/consumer"
-"$bundle/bin/allie" init --manifest .allie/manifest.yml \
-  --app-name "Published Allie Smoke" --fixture-dir "$bundle/fixtures/login"
-git init -q
-git config user.email "allie-smoke@example.invalid"
-git config user.name "Allie Smoke"
-git add .allie/manifest.yml
-git commit -q -m "published consumer fixture manifest"
-"$bundle/bin/allie" doctor --manifest .allie/manifest.yml --out .allie/doctor
-"$bundle/bin/allie" verify --manifest .allie/manifest.yml \
-  --project-root "$root/consumer" --out .allie/verify/latest
-"$bundle/bin/allie" publication --verify-root .allie/verify/latest --out .allie/public/latest
-node --input-type=module - "$tag" "$sha" <<'NODE'
-import fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
-const consumerSha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
-const evidence = JSON.parse(fs.readFileSync('.allie/verify/latest/run/evidence.json', 'utf8'));
-const receipt = JSON.parse(fs.readFileSync('.allie/public/latest/publication-receipt.json', 'utf8'));
-if (evidence.run.allie_version !== process.argv[2].slice(1) || evidence.summary.states_captured !== 1 ||
-    evidence.run.git_sha !== consumerSha || evidence.summary.infrastructure_failures !== 0 || receipt.status !== 'ready') {
-  throw new Error('Published binary failed the fixture verification/public-summary journey');
-}
-console.log(JSON.stringify({ event: 'allie.published_smoke', tag: process.argv[2], sha: process.argv[3],
-  checksum: 'verified', signature: 'verified', artifact_identity: 'verified',
-  consumer_sha: consumerSha, states_captured: evidence.summary.states_captured,
-  infrastructure_failures: 0, publication: receipt.status }));
-NODE
+"$script_dir/smoke-release-consumer.sh" "$root/allie" "$tag" "$sha"
+printf '{"event":"allie.published_smoke","tag":"%s","sha":"%s","checksum":"verified","signature":"verified","artifact_consumer":"verified"}\n' "$tag" "$sha"
