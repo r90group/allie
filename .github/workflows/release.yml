@@ -40,29 +40,9 @@ jobs:
 
       - run: npm run verify
 
-      - name: Prepare coherent revision-derived release version
+      - name: Build and exercise production release archive
         id: version
-        run: node scripts/prepare-release.mjs
-
-      - run: scripts/package-release.sh dist
-      - name: Verify archive on Debian 12
-        run: |
-          set -euo pipefail
-          smoke_root="$RUNNER_TEMP/allie-release-runtime-smoke"
-          rm -rf "$smoke_root"
-          mkdir -p "$smoke_root/work"
-          tar -xzf dist/allie-linux-x64.tar.gz -C "$smoke_root"
-          docker run --rm \
-            -v "$smoke_root/allie:/opt/allie:ro" \
-            -v "$smoke_root/work:/work" \
-            -w /work \
-            debian:bookworm-slim \
-            /opt/allie/bin/allie init --manifest .allie/manifest.yml --app-name "Release Runtime Smoke"
-          test -s "$smoke_root/work/.allie/manifest.yml"
-
-
-      - name: Generate release checksums
-        run: scripts/release-checksums.sh dist
+        run: scripts/build-release.sh dist
 
       - name: Stage unsigned release inputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

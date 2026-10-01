@@ -25,17 +25,29 @@ explicit override for nonstandard layouts, not part of the normal consumer path.
 
 Every successful `ci` push run on `master` automatically publishes its exact
 revision as the signed Linux x64 bundle. The four source manifests/lockfiles agree
-on the pre-stable release line `0.<minor>.0`, validated by the PR gate. After
-the full source gate, `scripts/prepare-release.mjs` uses full first-parent history
-to stage a monotonic patch before packaging. The workflow creates its own tag.
-There is no manual tag, version-bump PR, or per-release approval in the routine path.
+on the pre-stable release line `0.<minor>.0`, validated by the PR gate.
+The PR-only, read-only `release-preflight` job and trusted release build both run
+`scripts/build-release.sh dist` on Ubuntu 22.04 with full Git history. This shared
+entrypoint prepares the revision-derived version, builds the optimized production
+archive, generates and checks its checksum, runs native `init` on Debian 12, then
+drives the unpacked artifact through the committed consumer journey below.
+Preparation changes only the disposable checkout's manifests; PRs neither sign
+nor publish, receive no OIDC/private credentials, and never advance `latest`.
+The workflow creates its own tag after green master CI. There is no manual tag,
+version-bump PR, or per-release approval in the routine path.
 
 The three downloaded assets are checked by the read-only `smoke-published` job:
 checksum, exact workflow signer, signed `release.json` version/SHA, and the real
 installed fixture journey through `init`, `doctor`, `verify`, and `publication`.
-The smoke seeds a disposable committed Git consumer checkout and passes it as
-`--project-root`: Allie's evidence provenance requires a real consumer revision.
-The bundle's login fixture remains the target; no production/private data is used.
+Both archive preflight and authenticated downloaded smoke use
+`scripts/smoke-release-consumer.sh` to seed a disposable committed Git checkout
+and pass it as `--project-root`: Allie's evidence provenance requires a real
+consumer revision. The proof asserts artifact version/source identity, consumer
+evidence SHA, one captured state, zero infrastructure failures, and publication
+`ready`. The bundle's login fixture remains the target; no private data or paid
+model calls are used. This internal consumer helper is not an unsigned updater:
+the published wrapper still requires downloaded checksum, exact Cosign
+master-workflow issuer/signer, and tag SHA verification before extraction.
 To repeat this outside CI, use an authorized native `gh` login, Node 22, Cosign,
 and the Playwright Chromium system dependencies:
 

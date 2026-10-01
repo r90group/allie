@@ -18,6 +18,26 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run verify
 
+  release-preflight:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build and exercise production release archive without publishing
+        run: scripts/build-release.sh dist
+
   supply-chain-audit:
     runs-on: ubuntu-latest
     permissions:
