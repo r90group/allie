@@ -13,10 +13,12 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+mod ids;
 mod live;
 mod render;
 mod steps;
 
+use ids::{disambiguate_ids, route_to_id};
 use live::discover_live_base_url_surfaces;
 use render::{render_discovery_report, render_product_surface_map};
 use steps::{generated_steps_for_surface, manifest_steps_for_route};
@@ -631,6 +633,7 @@ fn product_surfaces(
         );
     }
 
+    let discovered_routes = surfaces.keys().cloned().collect::<BTreeSet<_>>();
     for html_path in project_html_files(project_root)? {
         let route = route_for_project_file(project_root, &html_path);
         let title = html_title(&html_path).unwrap_or_else(|| route_to_id(&route));
@@ -660,6 +663,13 @@ fn product_surfaces(
         );
     }
 
+    disambiguate_ids(surfaces.iter_mut().map(|(route, surface)| {
+        (
+            route.as_str(),
+            &mut surface.id,
+            discovered_routes.contains(route),
+        )
+    }))?;
     Ok(ProductSurfaceDiscovery {
         surfaces: surfaces.into_values().collect(),
         diagnostics: discovery_result.diagnostics,
@@ -913,6 +923,13 @@ fn discover_surfaces(manifest: &FlowManifest, manifest_path: &Path) -> Result<Su
         }
     }
 
+    disambiguate_ids(surfaces.iter_mut().map(|(route, surface)| {
+        (
+            route.as_str(),
+            &mut surface.id,
+            surface.source == "manifest",
+        )
+    }))?;
     Ok(SurfaceDiscovery {
         surfaces: surfaces.into_values().collect(),
         diagnostics,
@@ -957,21 +974,6 @@ fn route_for_fixture_file(root: &Path, path: &Path) -> String {
     } else {
         format!("/{}", relative.to_string_lossy().replace('\\', "/"))
     }
-}
-
-fn route_to_id(route: &str) -> String {
-    let mut id = route
-        .trim_matches('/')
-        .trim_end_matches(".html")
-        .chars()
-        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '-' })
-        .collect::<String>()
-        .trim_matches('-')
-        .to_string();
-    if id.is_empty() {
-        id = "home".to_string();
-    }
-    id
 }
 
 fn html_title(path: &Path) -> Option<String> {
