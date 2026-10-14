@@ -69,7 +69,7 @@ src/consumer/tests.rs	320
 src/out_dir/tests.rs	450
 src/discovery/steps.rs	250
 src/worker_runtime/tests.rs	250
-src/out_dir.rs	250
+src/out_dir.rs	240
 src/model_credentials.rs	220
 src/runtime.rs	200
 src/test_support.rs	170
