@@ -1,16 +1,16 @@
 # Competitive Landscape
 
-Last reviewed: 2026-08-22
+Last reviewed: 2026-10-14
 
 ## Positioning Thesis
 
-Allie should not compete as another accessibility scanner. The durable
-differentiator is an evidence-packet workbench: autonomous surface discovery,
+Allie should not compete as another accessibility scanner. The proposed
+differentiator is an evidence-packet harness: autonomous surface discovery,
 generated replayable tests, WCAG criterion-by-surface visibility, artifact
 drilldown, agentic context that remains non-blocking until promoted, and release
 decisions that can be audited.
 
-Competitors prove the market wants automation, guided manual review, dashboards,
+The reviewed products offer automation, guided manual review, dashboards,
 AI assistance, and enterprise audit workflows. Allie should use those lessons
 while staying sharper about local reproducibility, privacy policy, provenance,
 and host-agnostic CI/release contracts.
@@ -31,383 +31,492 @@ labels stable unless the script changes with the document contract. The script
 checks structure, source presence, and freshness; it does not replace human or
 agent review of vendor claims.
 
+## Review Scope and Evidence Limits
+
+The 2026-10-14 review inspected every previously cited primary-source URL and
+followed relevant canonical documentation. The accompanying
+[source ledger](landscape-source-review-2026-10-14.json) records checked URLs,
+claims, outcomes, redirects, and retrieval limitations. Inspection dates are
+not product-launch dates; public web extraction may use recently crawled text.
+
+These records distinguish documented interfaces from vendor marketing. No
+product account, live integration, coverage benchmark, or security audit was
+used. Missing documentation means a capability was not established here, not
+that it does not exist. Standards support is not complete automated coverage
+or legal assurance. Privacy claims require product- and deployment-specific
+validation. Allie differentiation notes describe strategic bets, not proof of
+uniqueness or a claim that every target capability is implemented.
+
+CI integration, exports, scripted states, guided replay, and AI assistance
+already appear across the reviewed products. The defensible comparison is how
+evidence preserves revision identity, explicit gaps, promotion decisions, and
+release policy across tools. Existing roadmap priorities remain; this review
+does not authorize integrations, provider calls, or feature expansion.
+
 ## Landscape Records
 
 ### Deque axe-core
 
 - **Category:** Open-source accessibility rules engine.
-- **Automation depth:** Automated Web UI checks that can be embedded in browser,
-  unit, integration, and end-to-end tests.
-- **Standards claims:** Deque describes axe-core coverage for WCAG 2.0, 2.1,
-  and 2.2 at A, AA, and AAA, plus standards that rely on WCAG.
-- **CI/PR integration:** Deque describes axe-core as built to integrate with
-  existing test environments so teams can automate accessibility testing beside
-  regular functional testing.
-- **Evidence artifacts and replay:** Produces rule results and WCAG-tagged
-  violations, but replay and artifact graph semantics belong to the calling
-  harness.
-- **Manual review workflow:** None by itself; it is a machine-check engine.
-- **AI/agentic claims:** None in the open-source engine.
-- **Privacy/governance posture:** Local library execution can stay inside the
-  consumer test environment.
-- **Allie differentiation:** Treat axe-core as deterministic evidence inside a
-  richer packet, not as the whole product surface, story map, or release policy.
+- **Automation depth:** README documents browser, unit, integration, and
+  functional-test use; callers choose which rendered states to scan.
+- **Standards claims:** Rules cover subsets of WCAG 2.0, 2.1, and 2.2 across
+  A/AA/AAA, plus best practices. This is not complete conformance coverage.
+- **CI/PR integration:** Integrates into existing automated tests; the calling
+  harness decides failures and CI policy.
+- **Evidence artifacts and replay:** API documents violations, passes,
+  incomplete and inapplicable results, rule tags, and element targets. Browser
+  state reconstruction and revision provenance remain harness responsibilities.
+- **Manual review workflow:** Incomplete results explicitly identify cases
+  needing human review; axe-core does not provide a guided audit interface.
+- **AI/agentic claims:** No AI feature is documented for the core engine in the
+  reviewed sources; commercial Axe products are a separate comparison.
+- **Privacy/governance posture:** Locally bundled JavaScript can run in the
+  consumer's test environment; surrounding integrations need separate review.
+- **Allie differentiation:** Proposed advantage is the evidence and release
+  contract around engine output, not scanner ownership or full WCAG coverage.
 - **Sources:** [axe-core GitHub](https://github.com/dequelabs/axe-core),
-  [Deque axe-core](https://www.deque.com/axe/axe-core/)
+  [Deque axe-core](https://www.deque.com/axe/axe-core/),
+  [axe-core API](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md)
 
 ### accessiBe and accessibility overlays
 
-- **Category:** Accessibility overlay/widget vendor.
-- **Automation depth:** Automated website modifications and AI-assisted
-  accessibility claims around a plug-in overlay.
-- **Standards claims:** The FTC alleged accessiBe claimed its plug-in could make
-  any website WCAG-compliant; the final order bars unsupported automated
-  WCAG-compliance and continuing-compliance representations.
-- **CI/PR integration:** Overlay installed into the site experience rather than
-  a repo-owned CI evidence loop.
-- **Evidence artifacts and replay:** Public trust issue is the opposite of
-  Allie's wedge: the FTC action centered on unsupported automated compliance
-  claims, not replayable per-revision evidence packets.
-- **Manual review workflow:** Not the primary trust contract in the FTC case.
-- **AI/agentic claims:** AI-powered accessibility tool claims were central to
-  the FTC's January 2025 complaint and April 2025 final order.
-- **Privacy/governance posture:** Third-party overlay posture; Allie should keep
-  local-first artifacts and provider routing explicit.
-- **Allie differentiation:** Lead with evidence, status, confidence, residual
-  review needs, and replay commands. Never promise legal compliance or automated
-  remediation.
-- **Sources:** [FTC final order](https://www.ftc.gov/news-events/news/press-releases/2025/04/ftc-approves-final-order-requiring-accessibe-pay-1-million),
+- **Category:** accessWidget overlay, within a vendor portfolio that also
+  advertises developer tooling and expert services; not all overlays are alike.
+- **Automation depth:** Vendor markets AI-driven page adjustments and recurring
+  scans. These are product claims, not independently tested effectiveness.
+- **Standards claims:** The April 2025 FTC order requires substantiation for
+  automated WCAG-compliance claims and $1 million payment. It concerns accessiBe,
+  not a finding about every overlay. Current marketing names WCAG 2.2 AA while
+  its FAQ still references 2.1 AA and acknowledges remediation limitations.
+- **CI/PR integration:** The reviewed accessWidget page describes website/CMS
+  installation; it does not establish CI behavior for the separate accessFlow.
+- **Evidence artifacts and replay:** Vendor advertises audit and impact reports;
+  a per-revision replay contract was not established in the reviewed sources.
+- **Manual review workflow:** Vendor now advertises expert flow testing,
+  assistive-technology checks, and documented custom enhancements.
+- **AI/agentic claims:** AI remediation and a visitor-facing assistant are
+  advertised; effectiveness was not tested in this review.
+- **Privacy/governance posture:** Vendor asserts SOC 2-related controls; this
+  review did not verify data flows, retention, or audit reports.
+- **Allie differentiation:** Prioritize substantiated evidence and residual
+  review needs; avoid automated legal-compliance promises.
+- **Sources:** [accessWidget](https://accessibe.com/accesswidget),
+  [FTC final-order announcement](https://www.ftc.gov/news-events/news/press-releases/2025/04/ftc-approves-final-order-requiring-accessibe-pay-1-million),
   [FTC accessiBe case page](https://www.ftc.gov/legal-library/browse/cases-proceedings/2223156-accessibe-inc)
 
 ### Deque axe DevTools and axe Platform
 
-- **Category:** Enterprise developer, guided testing, manual workflow, and
-  monitoring suite.
-- **Automation depth:** Automated axe checks plus guided tests, full-page and
-  user-flow testing, reporting, and platform workflow.
-- **Standards claims:** WCAG-oriented accessibility testing, with Deque warning
-  users to avoid false positives and combine automated, semi-automated, and
-  manual tests.
-- **CI/PR integration:** Developer tooling and integrations such as Jira and
-  workflow testing; Sauce Labs also exposes Deque integration material.
-- **Evidence artifacts and replay:** Reporting and sharing are platform/tooling
-  features; replay is not the public contract in the same packet-first sense.
-- **Manual review workflow:** Intelligent Guided Tests ask structured questions
-  about the app state and return guided results.
-- **AI/agentic claims:** axe DevTools Extension Pro markets AI-enhanced features
-  alongside Intelligent Guided Tests.
-- **Privacy/governance posture:** Enterprise platform posture; public pages do
-  not make local packet provenance the primary artifact.
-- **Allie differentiation:** Keep local evidence packets and replay commands as
-  the source of truth, with platform adapters as optional projections.
+- **Category:** Developer testing, guided/manual evaluation, and monitoring suite.
+- **Automation depth:** Combines automated checks, Intelligent Guided Tests
+  (IGTs), and platform workflows; feature availability depends on product/tier.
+- **Standards claims:** WCAG-oriented testing claims do not establish complete
+  automated coverage or a legal guarantee.
+- **CI/PR integration:** Deque explicitly markets Watcher/API pipeline testing,
+  PR linting, and automated blocking; this is more than Jira integration.
+- **Evidence artifacts and replay:** Extension marketing lists JSON, CSV, JUnit
+  XML, screenshots, and permalinks. IGT documentation explicitly supports Auto
+  Replay for Modal Dialog, Keyboard, and Forms, reusing answers and checking
+  changes; this is not evidence that all tests are replayable.
+- **Manual review workflow:** IGTs ask structured questions and retain progress;
+  Axe Auditor provides a separate manual-testing workflow.
+- **AI/agentic claims:** AI-assisted testing and Axe MCP Server remediation in AI
+  coding environments are marketed; no hands-on efficacy test was performed.
+- **Privacy/governance posture:** MCP marketing asserts enterprise security;
+  the IGT documentation warns against personal-data use. Deployment and
+  data-handling controls require product-specific verification.
+- **Allie differentiation:** Validate revision-linked, portable evidence and
+  explicit promotion policy as the advantage; replay alone is not unique.
 - **Sources:** [axe Platform](https://www.deque.com/axe/),
   [axe DevTools Extension](https://www.deque.com/axe/devtools/extension/),
-  [Intelligent Guided Tests docs](https://docs.deque.com/devtools-for-web/4/en/devtools-igt/)
+  [IGT and Auto Replay docs](https://docs.deque.com/devtools-for-web/4/en/devtools-igt/),
+  [CI/CD integration](https://www.deque.com/accessible-development/ci-cd/),
+  [Axe MCP Server](https://www.deque.com/axe/mcp-server/)
 
 ### Evinced
 
-- **Category:** AI-powered accessibility automation platform.
-- **Automation depth:** Markets automatic finding, clustering, tracking, and
-  prevention of accessibility issues across web and mobile apps.
-- **Standards claims:** WCAG-oriented accessibility testing and automation, with
-  claims of finding issues that previously required manual audits.
-- **CI/PR integration:** Public materials emphasize fitting test automation into
-  development workflows.
-- **Evidence artifacts and replay:** Findings and tracking are central; public
-  positioning does not expose a versioned evidence-packet/replay contract.
-- **Manual review workflow:** Automation is positioned as a complement to manual
-  audits and accessibility-manager workflows.
-- **AI/agentic claims:** Explicit AI-powered detection and clustering claims.
-- **Privacy/governance posture:** Public pages do not make model routing,
-  redaction receipts, or promotion state the primary contract.
-- **Allie differentiation:** Preserve AI output as review context until replayed,
-  scripted, or human-attested evidence promotes it.
+- **Category:** Accessibility automation platform with web/mobile SDKs and AI tools.
+- **Automation depth:** Vendor describes visual/semantic analysis, DOM-change
+  scanning, clustering, and issue tracking; Playwright documentation specifies
+  integration into existing functional tests.
+- **Standards claims:** Reports associate findings with WCAG tags. Marketing
+  claims broader detection; this review does not establish full WCAG coverage.
+- **CI/PR integration:** SDK marketing supports configurable build failures by
+  issue type/severity; Playwright integration is publicly documented.
+- **Evidence artifacts and replay:** Public report schema includes IDs,
+  signatures, severity, DOM snippets, selectors, and WCAG tags; JSON, HTML, and
+  CSV examples are published. Functional-test reruns are supported; a portable
+  revision-linked evidence contract was not established.
+- **Manual review workflow:** Vendor guidance treats automation as augmentation
+  of human assessment, not a replacement for all expert testing.
+- **AI/agentic claims:** Detection/clustering and MCP coding tools are marketed;
+  SDK docs also describe packaged AI-assistant integration skills.
+- **Privacy/governance posture:** Playwright docs describe online or supplied-token
+  offline authentication and optional uploads. Enterprise AI marketing describes
+  hosted/on-premise options and customizable retention; scope varies by product.
+- **Allie differentiation:** Test the value of explicit evidence promotion and
+  revision provenance; local output, SDK CI integration, and AI are not unique.
 - **Sources:** [Evinced](https://www.evinced.com/),
-  [Evinced technology](https://www.evinced.com/technology),
-  [Evinced automation overview](https://www.evinced.com/blog/introduction-to-test-automation-for-accessibility-managers)
+  [Technology](https://www.evinced.com/technology),
+  [Automation overview](https://www.evinced.com/blog/introduction-to-test-automation-for-accessibility-managers/),
+  [Automation SDKs](https://www.evinced.com/products/auto-test-sdks),
+  [Web report schema](https://developer.evinced.com/sdks-for-web-apps/web-reports/),
+  [Playwright SDK docs](https://developer.evinced.com/sdks-for-web-apps/playwright-js-sdk/),
+  [Enterprise AI](https://www.evinced.com/ai/enterprises),
+  [MCP tools](https://www.evinced.com/products/mcp-tools)
 
 ### Level Access
 
-- **Category:** Enterprise accessibility platform and services.
-- **Automation depth:** Automated scans, expert evaluation, reporting, training,
-  and broader accessibility program support.
-- **Standards claims:** Public statement names WCAG 2 Level A/AA, Section 508,
-  and EN 301 549 support.
-- **CI/PR integration:** Enterprise platform and product suite rather than a
-  single local CLI contract.
-- **Evidence artifacts and replay:** Reporting and evaluation are central;
-  replayable local evidence packets are not the public interface.
-- **Manual review workflow:** Expert evaluation and user testing are part of the
-  service/platform model.
-- **AI/agentic claims:** Not the primary public differentiator in the cited
-  sources.
-- **Privacy/governance posture:** Enterprise accessibility governance posture.
-- **Allie differentiation:** Serve engineering teams earlier in the repo and CI
-  loop before enterprise program-management artifacts are needed.
+- **Category:** Enterprise accessibility platform, developer tooling, and services.
+- **Automation depth:** Markets scanning, monitoring, expert evaluation,
+  remediation support, and program reporting.
+- **Standards claims:** Platform statement names support for WCAG 2 A/AA,
+  Section 508, and EN 301 549; Level CI separately markets WCAG 2.0/2.1 rules
+  through AAA. Neither establishes complete automated conformance coverage.
+- **CI/PR integration:** Level CI explicitly advertises pre-merge checks,
+  severity/score quality gates, delta scans, and pull-request fix recommendations.
+- **Evidence artifacts and replay:** Markets deduplicated delta reports,
+  monitoring, and audit reporting. Portable local replay/provenance semantics
+  were not established by the reviewed pages.
+- **Manual review workflow:** Expert audits and user testing complement
+  automated scans; the testing guide says human assessment remains necessary.
+- **AI/agentic claims:** AI agents are an explicit current offering, including
+  reporting, monitoring summaries, natural-language filtering, and fix guidance.
+- **Privacy/governance posture:** Vendor states security/privacy controls,
+  human oversight, SOC 2 Type II audits, ISO 27001 certification, and no sensitive
+  data processing by its AI; these assertions were not independently audited.
+- **Allie differentiation:** Compare portable evidence and provenance directly
+  against Level CI; entering the developer/CI loop is not a unique advantage.
 - **Sources:** [Level Access](https://www.levelaccess.com/),
-  [Level Access accessibility statement](https://www.levelaccess.com/accessibility-statement/),
-  [Automated testing guide](https://www.levelaccess.com/blog/automated-accessibility-testing-a-practical-guide-to-wcag-coverage/)
+  [Accessibility statement](https://www.levelaccess.com/accessibility-statement/),
+  [Automated testing guide](https://www.levelaccess.com/blog/automated-accessibility-testing-a-practical-guide-to-wcag-coverage/),
+  [Level CI](https://www.levelaccess.com/level-ci/),
+  [AI agents](https://www.levelaccess.com/ai-accessibility-agents/)
 
 ### Accessibility Insights
 
-- **Category:** Free guided assessment and browser-extension workflow.
-- **Automation depth:** FastPass automated checks, tab-stop helpers, and guided
-  assessment steps.
-- **Standards claims:** Assessment workflow targets WCAG 2.1 Level AA.
-- **CI/PR integration:** Primarily browser/assessment workflow; axe rules can be
-  integrated separately through build tooling.
-- **Evidence artifacts and replay:** Assessment and Quick Assess can export JSON
-  grouped by success criteria; export is useful evidence, but replay belongs to
-  the user workflow.
-- **Manual review workflow:** Strong guided manual assessment with pass/fail and
-  incomplete requirement states.
-- **AI/agentic claims:** No core AI-agent claim in official docs.
-- **Privacy/governance posture:** Browser-extension/local assessment posture;
-  official FAQ and community notes emphasize local data for extension use.
-- **Allie differentiation:** Automate surface discovery and pre-fill review
-  context across CI artifacts rather than requiring extension-driven setup.
+- **Category:** Open-source browser extension with guided assessments.
+- **Automation depth:** FastPass combines axe-powered checks and assisted keyboard
+  testing; hidden states must be revealed before scanning.
+- **Standards claims:** The Assessment guide now targets WCAG 2.2 AA; the overview
+  still says 2.1 AA. Automated checks provide partial criterion coverage.
+- **CI/PR integration:** The FAQ links axe pipeline samples; full FastPass and
+  Assessment require human analysis and cannot be completely automated.
+- **Evidence artifacts and replay:** Assessment exports HTML and criterion-grouped
+  JSON and saves resumable assessment files. The FAQ says results cannot be
+  aggregated across pages or states; saved assessments are not browser replay.
+- **Manual review workflow:** Automated, assisted, and manual requirements have
+  pass/fail/incomplete states and step-by-step guidance.
+- **AI/agentic claims:** No AI assessment capability identified in the reviewed
+  product documentation.
+- **Privacy/governance posture:** FAQ says complete scan data stays in the browser;
+  opt-in telemetry includes violation counts, excluding tested URLs and snippets.
+- **Allie differentiation:** Proposed advantage: connect multiple states and
+  revisions to replay and release evidence while retaining guided human review.
 - **Sources:** [Overview](https://accessibilityinsights.io/docs/web/overview/),
   [Assessment](https://accessibilityinsights.io/docs/web/getstarted/assessment/),
   [FAQ](https://accessibilityinsights.io/docs/web/reference/faq/)
 
 ### Pa11y
 
-- **Category:** Open-source CLI, CI, webservice, and dashboard family.
-- **Automation depth:** URL/page scanning through CLI and Node API, plus CI and
-  dashboard variants.
-- **Standards claims:** Accessibility issue reporting through automated checks;
-  CI-focused ecosystem commonly targets WCAG-oriented checks.
-- **CI/PR integration:** Pa11y CI is explicitly built for continuous integration.
-- **Evidence artifacts and replay:** CLI/JSON/webservice outputs and dashboard
-  history; no first-class browser-flow artifact graph.
-- **Manual review workflow:** Not a guided manual audit workflow.
-- **AI/agentic claims:** None in the core project.
-- **Privacy/governance posture:** Open-source local/CI operation is possible.
-- **Allie differentiation:** Go deeper on authenticated workflows, generated
-  Playwright states, standards matrices, and release decisions.
+- **Category:** Open-source CLI, CI, dashboard, and webservice family.
+- **Automation depth:** CLI/Node scanning uses HTML_CodeSniffer or axe; documented
+  scripted actions, headers, and supplied browser instances support prepared states.
+- **Standards claims:** Configurable WCAG levels and runner-specific rules;
+  Pa11y CI explicitly says passing automation does not establish accessibility
+  or standards conformance.
+- **CI/PR integration:** Pa11y CI scans URL lists, sitemaps, and local files;
+  configurable thresholds and exit codes support build decisions.
+- **Evidence artifacts and replay:** Structured results, JSON/CSV reporters,
+  scripted actions, and optional screenshots are documented. Repeatable scripts
+  should not be mistaken for an independently verified provenance contract.
+- **Manual review workflow:** Automation complements manual and assistive-technology
+  testing; no guided assessment workflow identified in these sources.
+- **AI/agentic claims:** No AI detection claim identified in the reviewed project
+  documentation.
+- **Privacy/governance posture:** Local/CI operation is supported; deployment,
+  reporters, and target-page requests determine the wider data boundary.
+- **Allie differentiation:** Proposed advantage: unify scripted-state evidence,
+  criterion coverage, human decisions, and revision provenance rather than claim
+  authenticated interaction or CI thresholds are unique.
 - **Sources:** [Pa11y](https://pa11y.org/),
   [Pa11y GitHub](https://github.com/pa11y/pa11y),
   [Pa11y CI](https://github.com/pa11y/pa11y-ci)
 
 ### Lighthouse and Chrome DevTools audits
 
-- **Category:** Developer audit runner and score/report surface.
-- **Automation depth:** Audits a URL from DevTools, CLI, Node, or CI; includes
-  accessibility audits among performance, SEO, and best-practices checks.
-- **Standards claims:** Accessibility score is a weighted average of Lighthouse
-  accessibility audits, with weighting based on axe user-impact assessments.
-- **CI/PR integration:** Lighthouse CI can prevent regressions on sites.
-- **Evidence artifacts and replay:** Generates Lighthouse reports; score and
-  audit output are not a criterion-by-surface evidence graph.
-- **Manual review workflow:** Helps developers inspect failed audits; not a full
-  manual WCAG assessment workflow.
-- **AI/agentic claims:** None in official Lighthouse docs.
-- **Privacy/governance posture:** Local browser/CLI execution is possible.
-- **Allie differentiation:** Avoid global scores; expose exact criteria, product
-  states, residual review needs, and release-policy decisions.
+- **Category:** Open-source developer audit runner with reports and scores.
+- **Automation depth:** DevTools/CLI/Node audits; scripted user flows include
+  accessibility snapshots. Timespan mode has no accessibility category.
+- **Standards claims:** Accessibility scoring weights automated audits using axe
+  impact assessments; manual and low-impact/best-practice checks are excluded
+  from the score. A score is not a full WCAG conformance finding.
+- **CI/PR integration:** Lighthouse CI runs, stores, retrieves, and asserts against
+  results for regression workflows.
+- **Evidence artifacts and replay:** HTML/JSON reports, saved traces/logs, and
+  separate gathering/re-auditing modes are documented, alongside flow reports.
+- **Manual review workflow:** Reports provide remediation references and manual
+  checks; these do not constitute a complete guided WCAG assessment.
+- **AI/agentic claims:** Chrome documents coding agents invoking Lighthouse and
+  interpreting accessibility findings. Separate experimental Agentic Browsing
+  audits use deterministic signals for machine interaction, not human WCAG proof.
+- **Privacy/governance posture:** Core audits run locally; optional error reporting,
+  report sharing, hosted CI, and agent integrations require separate consideration.
+- **Allie differentiation:** Proposed advantage: criterion-by-surface provenance
+  and human-attested release decisions beyond scores, flow reports, and re-audits.
 - **Sources:** [Lighthouse overview](https://developer.chrome.com/docs/lighthouse/overview),
-  [Lighthouse accessibility scoring](https://developer.chrome.com/docs/lighthouse/accessibility/scoring),
-  [Lighthouse GitHub](https://github.com/GoogleChrome/lighthouse)
+  [Accessibility scoring](https://developer.chrome.com/docs/lighthouse/accessibility/scoring),
+  [Lighthouse GitHub](https://github.com/GoogleChrome/lighthouse),
+  [User flows](https://github.com/GoogleChrome/lighthouse/blob/main/docs/user-flows.md),
+  [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci),
+  [Agent workflows](https://developer.chrome.com/docs/devtools/agents/use-cases/lighthouse-audit),
+  [Agentic Browsing scoring](https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring)
 
 ### BrowserStack Accessibility
 
-- **Category:** Browser/device cloud with accessibility testing.
-- **Automation depth:** Automated accessibility testing through Automate using
-  axe-core plus broader accessibility product features.
-- **Standards claims:** Axe-core-backed rule reports and accessibility issue
-  detection; BrowserStack markets accessibility testing for WCAG-oriented work.
-- **CI/PR integration:** Fits existing BrowserStack Automate/Selenium workflows.
-- **Evidence artifacts and replay:** Cloud test session artifacts and axe
-  reports are runner outputs; policy and packet semantics remain external.
-- **Manual review workflow:** Browser/device cloud can support manual and
-  screen-reader testing workflows.
-- **AI/agentic claims:** BrowserStack markets an accessibility issue-detection
-  AI agent that brings human-like judgment to accessibility testing.
-- **Privacy/governance posture:** Hosted cloud execution; governance follows
-  BrowserStack account and product controls.
-- **Allie differentiation:** Make browser clouds execution adapters while Allie
-  owns local policy, evidence provenance, and replay semantics.
+- **Category:** Browser/device-cloud accessibility suite with scanning, assisted
+  tests, monitoring, and screen-reader workflows.
+- **Automation depth:** Current marketing describes Spectra and AI-assisted
+  detection, rather than only axe-core. Documentation describes workflow scans
+  and scheduled website monitoring.
+- **Standards claims:** Vendor says scanners target WCAG 2.0, 2.1, and 2.2 at
+  A, AA, and AAA; this is an issue-detection claim, not proof of full conformance.
+- **CI/PR integration:** SDK-based CI/CD checks, DOM-change triggers, configurable
+  scan scopes, and assertions are advertised; not exercised in this review.
+- **Evidence artifacts and replay:** Vendor describes centralized reports,
+  deduplicated findings, build history, and conformance summaries. A portable
+  replay-packet contract was not established by the reviewed sources.
+- **Manual review workflow:** Docs describe Assisted Tests with user confirmation
+  and native VoiceOver, NVDA, and TalkBack testing.
+- **AI/agentic claims:** Markets contextual issue detection and remediation
+  guidance; accuracy and coverage figures are vendor claims, not benchmarks here.
+- **Privacy/governance posture:** Web-based reporting and cloud-device workflows
+  are documented. Retention, model routing, and redaction guarantees were not
+  verified in these sources.
+- **Allie differentiation:** Make cloud execution optional while preserving
+  portable provenance and replay. Do not imply BrowserStack lacks release
+  assertions or visibility into remaining manual checks.
 - **Sources:** [BrowserStack accessibility testing](https://www.browserstack.com/accessibility-testing),
-  [Automate accessibility docs](https://www.browserstack.com/docs/automate/selenium/accessibility-testing),
+  [Accessibility overview docs](https://www.browserstack.com/docs/accessibility/overview/introduction),
+  [Automated tests](https://www.browserstack.com/accessibility-testing/features/automated-tests),
   [BrowserStack AI agents](https://www.browserstack.com/accessibility-testing/ai-agents)
 
 ### Sauce Labs Accessibility
 
-- **Category:** Continuous testing cloud with accessibility integrations.
-- **Automation depth:** Sauce integrates Deque/axe into web and mobile testing
-  workflows on Sauce infrastructure.
-- **Standards claims:** Deque/Sauce pages describe compliance and global
-  accessibility standards in the context of axe testing.
-- **CI/PR integration:** Strong CI/testing-cloud posture through existing Sauce
-  test workflows.
-- **Evidence artifacts and replay:** Sauce session outputs plus axe results are
-  platform artifacts; Allie-style packet/release projection is not the public
-  contract.
-- **Manual review workflow:** Primarily automation/cloud workflow; manual review
-  is not the core cited differentiator.
-- **AI/agentic claims:** Not the primary cited accessibility claim.
-- **Privacy/governance posture:** Secure/scalable cloud positioning.
-- **Allie differentiation:** Keep Sauce as a runner option, not the source of
-  accessibility policy or release semantics.
+- **Category:** Testing cloud with Deque accessibility integrations.
+- **Automation depth:** Docs show axe-core in browser tests; product marketing
+  separately describes axe DevTools Mobile for Appium on the Real Device Cloud.
+- **Standards claims:** Marketing frames the partnership around EAA readiness.
+  The reviewed integration guide does not establish exhaustive WCAG-version or
+  success-criterion coverage, or guarantee compliance.
+- **CI/PR integration:** Documented examples add axe checks to Selenium and
+  WebdriverIO tests; the Deque guide demonstrates scanning the current page.
+- **Evidence artifacts and replay:** Sauce docs describe an Accessibility tab
+  and detailed full-page results. Cross-tool replay provenance and release
+  packet semantics were not established by these sources.
+- **Manual review workflow:** The reviewed integration material focuses on
+  automated tests and result inspection; it does not specify a guided manual
+  WCAG assessment workflow.
+- **AI/agentic claims:** No accessibility-specific AI capability was established
+  by these three sources; broader Sauce AI navigation is not sufficient evidence.
+- **Privacy/governance posture:** Tests use a Sauce account and cloud
+  infrastructure; the Deque example exposes region selection. Accessibility-data
+  retention and AI-processing guarantees were not verified here.
+- **Allie differentiation:** Support Sauce as an execution adapter while keeping
+  the evidence schema and release policy portable.
 - **Sources:** [Sauce accessibility testing](https://saucelabs.com/products/accessibility-testing),
   [Sauce Deque integration docs](https://docs.saucelabs.com/basics/integrations/deque/),
   [Deque and Sauce guide](https://www.deque.com/saucelabs/get-started/)
 
 ### Stark
 
-- **Category:** Design-to-code accessibility platform.
-- **Automation depth:** Integrated tools across design, code, live product, WCAG
-  audits, source-code scanning, and compliance workflows.
-- **Standards claims:** WCAG audit and compliance positioning across product and
-  design workflows.
-- **CI/PR integration:** Source-code scanning and developer tooling, including
-  CLI/ESLint positioning in public materials.
-- **Evidence artifacts and replay:** Dashboard and report workflows; runtime
-  browser replay is not the core contract.
-- **Manual review workflow:** Product and compliance center workflows help teams
-  manage accessibility posture.
-- **AI/agentic claims:** Public extension/store language includes smart
-  suggestions; core differentiation is broader end-to-end workflow.
-- **Privacy/governance posture:** Platform compliance-center posture.
-- **Allie differentiation:** Focus on application-runtime evidence, replayable
-  browser artifacts, and release-gate semantics after code is running.
+- **Category:** Accessibility platform spanning design, source code, live assets,
+  reporting, and compliance management.
+- **Automation depth:** Marketing describes continuous design/repository scans;
+  support docs specify CLI scanning, ESLint integration, and dashboard sync.
+- **Standards claims:** WCAG-oriented issue detection and regulatory-control
+  management are advertised; the reviewed pages do not establish complete
+  criterion coverage or automatic legal compliance.
+- **CI/PR integration:** Source-code docs provide token-authenticated CLI scans
+  and CI/CD configuration; the product also advertises GitHub integration.
+- **Evidence artifacts and replay:** Project reports and audit evidence are
+  marketed; CLI findings synchronize to Stark. A portable runtime-replay packet
+  contract was not established by these sources.
+- **Manual review workflow:** Compliance Center lets teams assign/document
+  controls and access evidence. This is governance workflow, not verified
+  exhaustive manual test coverage.
+- **AI/agentic claims:** Explicit AI suggestions and automation; an August 2026
+  announcement describes a Claude connector for scans, findings, and compliance
+  status. These are vendor-described capabilities, not tested here.
+- **Privacy/governance posture:** Marketing names SSO and SOC 2; source-code docs
+  require a token and automatically upload scan results. Certification scope,
+  retention, and model-routing guarantees were not independently verified.
+- **Allie differentiation:** Prioritize reproducible runtime evidence and explicit
+  promotion into release gates; do not position Stark as design-only or merely
+  offering smart suggestions.
 - **Sources:** [Stark](https://www.getstark.co/),
   [Source code scanning](https://www.getstark.co/blog/source-code-scanning/),
-  [Stark blog](https://www.getstark.co/blog/)
+  [Source-code integration docs](https://www.getstark.co/support/getting-started/using-source-code-integration/),
+  [Claude connector announcement](https://www.getstark.co/blog/claude-connector/)
 
 ### WAVE and WebAIM
 
-- **Category:** Browser extension, online scanner, API, and evaluation aid.
-- **Automation depth:** Page analysis through web UI, extensions, API, and
-  stand-alone testing engine.
-- **Standards claims:** Accessibility evaluation support; WAVE explicitly warns
-  that no automated tool can tell whether a page is accessible.
-- **CI/PR integration:** API and stand-alone engine can be integrated into
-  infrastructure, including CI.
-- **Evidence artifacts and replay:** Visual page feedback, API data, and testing
-  engine outputs; replay depends on the calling system.
-- **Manual review workflow:** Strong human-evaluation aid with visual indicators
-  and education-oriented feedback.
-- **AI/agentic claims:** None in the cited official pages.
-- **Privacy/governance posture:** Browser extension runs entirely in the browser
-  and is described as suitable for intranet, password-protected, and sensitive
-  pages.
-- **Allie differentiation:** Import scanner-style evidence while preserving
-  product-flow replay, artifact graphs, and release policy context.
+- **Category:** Online evaluation tool, browser extensions, subscription API, and
+  licensable stand-alone engine.
+- **Automation depth:** Page checks through hosted, extension, and API workflows;
+  scripting support differs, so identical URLs need not produce identical results.
+- **Standards claims:** Help documents WCAG 2.2/Section 508-related checks and
+  explicitly rejects treating an error-free result as accessibility certification.
+- **CI/PR integration:** WebAIM documents stand-alone infrastructure and CI
+  integration; the subscription API performs remote URL analysis.
+- **Evidence artifacts and replay:** In-page indicators and JSON/XML API results,
+  optionally with XPath detail; browser-state replay is the caller's responsibility.
+- **Manual review workflow:** Visual indicators, code inspection, and guidance
+  support human evaluation, including matters automation cannot determine.
+- **AI/agentic claims:** No AI evaluation claim identified in the reviewed WAVE
+  documentation.
+- **Privacy/governance posture:** WebAIM says extension evaluation stays in the
+  browser without sending information to its servers. This does not describe the
+  hosted URL/API service; stand-alone deployment is a separate option.
+- **Allie differentiation:** Proposed advantage: connect scanner results and
+  human judgments to reproducible product states and release provenance.
 - **Sources:** [WAVE](https://wave.webaim.org/),
   [WAVE API](https://wave.webaim.org/api/),
-  [WAVE extension](https://wave.webaim.org/extension/)
+  [WAVE extension](https://wave.webaim.org/extension/),
+  [WAVE Help](https://wave.webaim.org/help)
 
 ### Siteimprove
 
-- **Category:** Enterprise governance, monitoring, content intelligence, and
-  accessibility platform.
-- **Automation depth:** Platform audits and monitors accessibility across sites;
-  Siteimprove has added AI-supported accessibility rules.
-- **Standards claims:** Public accessibility software page names WCAG 2.1 and
-  2.2 at A, AA, and AAA, plus ADA, Section 508, and EAA context.
-- **CI/PR integration:** Platform and dashboard posture rather than a portable
-  local CLI contract.
-- **Evidence artifacts and replay:** Dashboards, reports, scores, and tracked
-  issues; replayable local packets are not the primary artifact.
-- **Manual review workflow:** Enterprise accessibility workflow and issue
-  guidance, not a code-repo-first audit packet.
-- **AI/agentic claims:** AI-supported rules to expand WCAG coverage and improve
-  detection accuracy are public in help content.
-- **Privacy/governance posture:** Enterprise platform governance and ACR-facing
-  posture.
-- **Allie differentiation:** Stay narrower and deeper for engineering release
-  evidence instead of broad content-program management.
-- **Sources:** [Siteimprove accessibility software](https://www.siteimprove.com/platform/accessibility/web-accessibility-software/),
-  [Siteimprove compliance](https://www.siteimprove.com/web-accessibility-compliance/),
+- **Category:** Enterprise accessibility and content-governance platform,
+  currently marketed as Siteimprove.ai.
+- **Automation depth:** Marketing describes continuous monitoring,
+  prioritization, and remediation across public/authenticated digital assets;
+  breadth and effectiveness were not tested.
+- **Standards claims:** Current pages discuss WCAG and ADA/Section 508/EAA
+  support. The formerly cited product URL redirects to a page that does not
+  substantiate the previous exact WCAG-version/level coverage claim.
+- **CI/PR integration:** Current marketing explicitly names CI/CD, IDE/design
+  workflows, and an MCP Server. Integration behavior was not exercised.
+- **Evidence artifacts and replay:** Help content documents DCI Accessibility
+  score changes when new rules are enabled; reviewed pages did not establish
+  portable revision-bound replay artifacts.
+- **Manual review workflow:** Vendor explicitly offers manual audits, workshops,
+  VPAT writing, and education alongside automation.
+- **AI/agentic claims:** Marketing promotes accessibility agents; help documents
+  opt-in AI-supported checks for descriptive page titles and headings. Its
+  statement of three new rules conflicts with the two rules actually listed.
+- **Privacy/governance posture:** Marketing describes shared platform governance;
+  deployment, retention, and model data flows were not verified.
+- **Allie differentiation:** Focus on independently inspectable release evidence;
+  CI integration, agents, and governance are already competitor claims.
+- **Sources:** [Accessibility platform](https://www.siteimprove.com/platform/accessibility/),
+  [Compliance overview](https://www.siteimprove.com/web-accessibility-compliance/),
   [AI-supported rules](https://help.siteimprove.com/support/solutions/articles/80001183313-expanding-wcag-coverage-with-new-ai-supported-rules)
 
 ### IBM Equal Access Toolkit
 
 - **Category:** Open accessibility lifecycle guidance and checker tooling.
-- **Automation depth:** Toolkit spans plan/design/develop/verify/launch; verify
-  includes automated, manual, and screen-reader testing guidance.
-- **Standards claims:** Equal Access tooling topics include WCAG 2.0, 2.1, 2.2,
-  and Section 508.
-- **CI/PR integration:** Equal Access Accessibility Checker includes browser and
-  continuous development/build environment tooling.
-- **Evidence artifacts and replay:** Checker outputs and lifecycle guidance;
-  no Allie-style evidence packet/release projection contract.
-- **Manual review workflow:** Manual and screen-reader verification are explicit
-  parts of the toolkit.
-- **AI/agentic claims:** None in the cited official sources.
-- **Privacy/governance posture:** Open toolkit and local tooling posture.
-- **Allie differentiation:** Learn from the lifecycle framing while making each
-  verification artifact executable, replayable, and release-aware.
+- **Automation depth:** Browser extensions and Node testing packages accompany
+  plan/design/develop/verify/launch guidance.
+- **Standards claims:** Repository topics identify WCAG 2.0/2.1/2.2 and US Section
+  508; IBM explicitly says automated checks cover only a subset of requirements.
+- **CI/PR integration:** Node tooling documents Selenium, Puppeteer, Playwright,
+  and CI integration, configurable failure levels, and baseline comparisons.
+- **Evidence artifacts and replay:** JSON/CSV/HTML results, optional XLSX, rule
+  archive selection, and baselines are documented. These are substantive
+  reproducibility controls, not a tested end-to-end release provenance guarantee.
+- **Manual review workflow:** IBM requires manual and screen-reader tests after
+  automated verification; results distinguish violations and items needing review.
+- **AI/agentic claims:** No AI checking claim identified in the reviewed toolkit
+  and checker documentation.
+- **Privacy/governance posture:** Browser and local test tooling are available;
+  Node docs reference externally loaded engines/rule servers, so local execution
+  alone does not establish an offline or zero-egress configuration.
+- **Allie differentiation:** Proposed advantage: connect existing rule/version
+  controls and review outcomes into portable surface-to-release provenance.
 - **Sources:** [IBM Equal Access Toolkit](https://www.ibm.com/able/toolkit/),
   [Verify automated](https://www.ibm.com/able/toolkit/verify/automated/),
-  [Equal Access GitHub](https://github.com/ibma/equal-access)
+  [Equal Access GitHub](https://github.com/ibma/equal-access),
+  [Node checker documentation](https://github.com/IBMa/equal-access/blob/main-4.x/accessibility-checker/README.md)
 
 ### W3C WAI tools list and ACT Rules
 
-- **Category:** Neutral ecosystem directory and testing-rule standardization.
-- **Automation depth:** W3C lists many evaluation tools; ACT Rules cover
-  automated, semi-automated, and manual testing methods.
-- **Standards claims:** ACT Rules are designed for conformance testing against
-  WCAG, ARIA, and other accessibility practices.
-- **CI/PR integration:** W3C is not a runner; tools and implementers use the
-  rules and directory.
-- **Evidence artifacts and replay:** Rules include test cases and examples, but
-  do not prescribe an Allie packet shape.
-- **Manual review workflow:** ACT explicitly includes manual and
-  semi-automated testing.
-- **AI/agentic claims:** None; this is standards and ecosystem guidance, not an
-  AI product claim.
-- **Privacy/governance posture:** Standards and directory posture.
-- **Allie differentiation:** Use W3C materials to make coverage gaps explicit
-  instead of implying automation can prove every success criterion.
+- **Category:** Evaluation-tool directory and accessibility testing-rule resources.
+- **Automation depth:** ACT addresses automated, semi-automated, and manual
+  methods; the directory is not a testing engine.
+- **Standards claims:** ACT Rules cover aspects of WCAG 2.2, ARIA, and other
+  practices. They are informative, partial checks; WCAG success criteria remain
+  normative, and passing rules does not establish full conformance.
+- **CI/PR integration:** Implementers incorporate rules into tools and
+  methodologies; W3C does not supply a CI runner through these resources.
+- **Evidence artifacts and replay:** Rules include applicability, expectations,
+  mappings, and passed/failed/inapplicable examples for checking implementation
+  consistency, rather than product-specific execution evidence.
+- **Manual review workflow:** Manual and semi-automated implementation types are
+  explicit; broader criterion verification can require human testing.
+- **AI/agentic claims:** No AI product capability is claimed by these standards
+  resources; listed products' claims belong to their submitters.
+- **Privacy/governance posture:** W3C disclaims endorsement of provider-submitted
+  tool listings; the rules list distinguishes approved, proposed, and deprecated
+  rules. Runtime privacy depends on the implementing tool.
+- **Allie differentiation:** Proposed use: record rule status, applicability, and
+  uncovered criterion aspects instead of converting rule passes into compliance.
 - **Sources:** [W3C evaluation tools list](https://www.w3.org/WAI/test-evaluate/tools/list/),
   [ACT overview](https://www.w3.org/WAI/standards-guidelines/act/),
-  [ACT Rules](https://www.w3.org/WAI/standards-guidelines/act/rules/)
+  [ACT Rules](https://www.w3.org/WAI/standards-guidelines/act/rules/),
+  [About ACT Rules](https://www.w3.org/WAI/standards-guidelines/act/rules/about/)
 
 ### TPGi ARC Platform and ARC Toolkit
 
-- **Category:** Enterprise accessibility platform plus browser-testing toolkit.
-- **Automation depth:** ARC Platform includes automated monitoring, user-flow
-  tests, program management, integrations, and knowledge base; ARC Toolkit is a
-  page-level extension.
-- **Standards claims:** ARC Toolkit targets WCAG 2.1 Level A and AA; monitoring
-  pages discuss machine-detectable WCAG 2.0 and 2.1 defects.
-- **CI/PR integration:** ARC Platform describes integrations and continuous
-  accessibility data flows; API material references CI/CD use.
-- **Evidence artifacts and replay:** Dashboards, monitoring data, findings, and
-  knowledge-base guidance; replay semantics belong to ARC workflows.
-- **Manual review workflow:** ARC consolidates automated and manual audit data in
-  one central location.
-- **AI/agentic claims:** Not the cited public differentiator.
-- **Privacy/governance posture:** Enterprise program-management posture.
-- **Allie differentiation:** Compete by keeping the developer-facing evidence
-  packet and release decision portable before enterprise dashboard adoption.
-- **Sources:** [ARC Platform](https://www.tpgi.com/arc-platform/),
-  [ARC Toolkit](https://www.tpgi.com/arc-platform/arc-toolkit/),
-  [ARC Monitoring](https://www.tpgi.com/arc-platform/monitoring/)
+- **Category:** Enterprise accessibility monitoring and a page-testing extension,
+  now presented on Vispero's site.
+- **Automation depth:** ARC markets continuous scans and regression monitoring;
+  Toolkit performs on-demand single-page checks using the ARC rules engine.
+- **Standards claims:** ARC monitoring names WCAG 2.2 and regulatory alignment;
+  the separate Toolkit page still specifies WCAG 2.1 A/AA. These claims must not
+  be conflated into identical coverage.
+- **CI/PR integration:** Current pages describe development/QA integration and
+  mention the ARC API; they do not establish specific CI gate or PR mechanics.
+- **Evidence artifacts and replay:** Dashboards, trends, and remediation tracking
+  are advertised; Toolkit exposes element-level findings and copy/paste into
+  issue trackers. Portable replay semantics were not established.
+- **Manual review workflow:** Vispero explicitly says monitoring does not replace
+  expert manual testing. Toolkit provides tab-order visualization and detailed
+  on-page inspection.
+- **AI/agentic claims:** No AI-specific capability established in the reviewed ARC
+  and Toolkit pages; governance intelligence wording alone is insufficient.
+- **Privacy/governance posture:** Enterprise governance/reporting is marketed;
+  data residency, retention, and local-only processing were not verified here.
+- **Allie differentiation:** Keep evidence and release decisions portable across
+  monitoring vendors; distinguish engineering provenance from dashboard trends.
+- **Sources:** [ARC monitoring](https://vispero.com/accessibility-audit-vpat-testing/arc/),
+  [ARC Toolkit](https://vispero.com/lp/arc-toolkit/)
 
 ### Applitools Contrast Advisor
 
-- **Category:** Visual AI testing with accessibility contrast analysis.
-- **Automation depth:** Visual AI examines web, mobile web, native mobile,
-  desktop, PDFs, graphics, icons, UI components, and text for contrast guidance.
-- **Standards claims:** Documentation says Contrast Advisor helps comply with
-  WCAG visual-impairment requirements and focuses on contrast ratios.
-- **CI/PR integration:** Applitools fits existing visual test automation
-  workflows.
-- **Evidence artifacts and replay:** Visual test baselines and contrast findings
-  are Applitools artifacts; Allie-style standards matrix and release projection
-  remain external.
-- **Manual review workflow:** Visual differences and contrast findings still
-  require review in test workflows.
-- **AI/agentic claims:** Explicit Visual AI positioning.
-- **Privacy/governance posture:** Hosted visual testing platform posture.
-- **Allie differentiation:** Use visual AI as one evidence class, then connect
-  findings to WCAG criteria, product surfaces, redaction, and release policy.
-- **Sources:** [Contrast Advisor](https://applitools.com/platform/validate/accessibility/),
-  [Contrast Advisor docs](https://applitools.com/docs/eyes/concepts/test-execution/accessibility-testing),
-  [Visual AI accessibility](https://applitools.com/lp/accessibility-testing/)
+- **Category:** Eyes visual-testing feature for contrast analysis.
+- **Automation depth:** Documentation describes pixel-based contrast checks at
+  test checkpoints, including images, icons, and non-DOM mobile content.
+- **Standards claims:** Docs identify WCAG 1.4.3, 1.4.6, and 1.4.11; product
+  marketing offers WCAG 2.0/2.1 with AA/AAA settings. This is contrast coverage,
+  not a full accessibility assessment.
+- **CI/PR integration:** Enabled in existing Eyes SDK test runs; specific
+  accessibility PR-gate behavior was not verified in the reviewed pages.
+- **Evidence artifacts and replay:** Test Manager shows checkpoint images,
+  measured/required ratios, and separate accessibility status. Contrast checks
+  explicitly do not compare against a reference visual baseline.
+- **Manual review workflow:** Users inspect flagged regions and may override
+  element classification or exclude regions; this is contrast-result review.
+- **AI/agentic claims:** Markets Visual AI for contrast measurement; no autonomous
+  whole-WCAG assurance follows from that claim.
+- **Privacy/governance posture:** Current product marketing claims local visual
+  processing and no external-model transmission or training of snapshots.
+  Deployment scope and technical enforcement were not verified; the older
+  hosted-only characterization is therefore too broad.
+- **Allie differentiation:** Treat contrast findings as one evidence class within
+  a broader criterion/surface ledger and governed release decision.
+- **Sources:** [Contrast Advisor](https://applitools.com/solutions/accessibility-testing/),
+  [Contrast Advisor docs](https://applitools.com/docs/eyes/concepts/test-execution/accessibility-testing)
 
 ## Differentiation Bets
 
@@ -431,7 +540,9 @@ agent review of vendor claims.
 Run this checklist before V1 positioning changes, hosted/dashboard work, pricing
 or packaging decisions, and after any real-app dogfood run:
 
-- Refresh `Last reviewed` with the review date.
+- Complete the primary-source review and evidence ledger before updating
+  `Last reviewed` to the actual inspection date. Do not refresh it only to pass
+  the freshness gate.
 - Add or remove vendors only with a source URL and an Allie differentiation
   note.
 - For every entry, re-check automation depth, standards claims, CI/PR
@@ -456,14 +567,14 @@ or packaging decisions, and after any real-app dogfood run:
 
 ## Watchlist
 
-- Deque AI-assisted guided/manual testing depth and any public packet/export
-  model changes.
-- Evinced AI detection and clustering claims, especially whether findings become
-  CI blockers and how evidence is retained.
-- Level Access, TPGi ARC, Siteimprove, and Stark compliance-center evidence
-  models.
-- BrowserStack, Sauce Labs, and Applitools accessibility artifacts, screen-reader
-  workflows, cloud export formats, and AI positioning.
+- Deque guided-test replay boundaries, automated IGTs, and export/provenance
+  contracts; distinguish documented reuse from demonstrated revision replay.
+- Evinced SDK failure policy, optional uploads, offline authentication, and
+  product-specific retention rather than treating CI blocking as absent.
+- Level CI, Vispero ARC, Siteimprove, and Stark evidence models, including
+  deployment-specific AI data flows and machine-readable exports.
+- BrowserStack assertions and manual-gap summaries, Sauce integration versions,
+  and Applitools local-processing claims and contrast-only boundaries.
 - WAVE, IBM Equal Access, Accessibility Insights, Pa11y, and W3C ACT rules as
   open or neutral sources for evidence and coverage discipline.
 

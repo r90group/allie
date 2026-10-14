@@ -63,6 +63,12 @@ Before adding dashboard, browser-cloud, or AI-heavy work, refresh
 that improve packet provenance, replayability, privacy governance, and
 criterion-by-surface drilldown over scanner-rule parity.
 
+The 2026-10-14 source review shows that CI integration, exports, guided replay,
+and AI assistance are already competitive capabilities. Evaluate Allie changes
+by the additional packet provenance, replayability, and privacy governance they
+prove; do not assume competing tools lack these workflows or turn vendor
+marketing into a coverage guarantee.
+
 ## Later
 
 1. Enable approved live multimodal provider calls behind the model gateway.
