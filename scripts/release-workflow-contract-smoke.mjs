@@ -69,7 +69,7 @@ function validateReleaseWorkflow(text) {
     fail('Signing and downloaded smoke must follow the candidate build');
   }
   if (expression(channel.if) !== "needs.smoke-published.result=='success'" ||
-      expression(retract.if) !== "!cancelled()&&needs.sign-and-publish.result=='success'&&needs.smoke-published.result!='success'") {
+      expression(retract.if) !== "!cancelled()&&needs.sign-and-publish.outputs.release_id!=''&&needs.smoke-published.result!='success'") {
     fail('Healthy promotion and failed-candidate quarantine must be mutually exclusive');
   }
   if (!channel.concurrency?.group || channel.concurrency['cancel-in-progress'] !== false || retract.concurrency) {
@@ -269,6 +269,13 @@ expectRejected(() => validateReleaseWorkflow(stringifyYaml(unsafeSigner)), 'sign
 const unsafeQuarantine = parseYaml(releaseText);
 unsafeQuarantine.jobs['retract-failed'].concurrency = { group: 'allie-release-channel' };
 expectRejected(() => validateReleaseWorkflow(stringifyYaml(unsafeQuarantine)), 'failed-candidate quarantine can be coalesced');
+const quarantine = new Function('needs', 'cancelled', `return (${expression(parseYaml(releaseText).jobs['retract-failed'].if)
+  .replaceAll('needs.sign-and-publish', 'needs["sign-and-publish"]')
+  .replaceAll('needs.smoke-published', 'needs["smoke-published"]')});`);
+for (const [releaseId, smoke, expected] of [['123', 'skipped', true], ['123', 'failure', true], ['', 'skipped', false], ['123', 'success', false]]) {
+  if (quarantine({ 'sign-and-publish': { result: 'failure', outputs: { release_id: releaseId } },
+    'smoke-published': { result: smoke } }, () => false) !== expected) fail('Post-publication signer failure escaped quarantine');
+}
 
 
 // Validate generator output without another version authority or file mutation.

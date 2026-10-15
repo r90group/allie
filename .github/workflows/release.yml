@@ -263,7 +263,7 @@ jobs:
     needs: [build-release, sign-and-publish, smoke-published]
     if: >-
       !cancelled() &&
-      needs.sign-and-publish.result == 'success' &&
+      needs.sign-and-publish.outputs.release_id != '' &&
       needs.smoke-published.result != 'success'
     runs-on: ubuntu-latest
     permissions:
