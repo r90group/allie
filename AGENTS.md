@@ -55,11 +55,11 @@ Every meaningful change should state:
 
 ## Continuous release
 
-Green `ci` push runs on `master` automatically publish the signed Linux bundle
-and smoke the downloaded artifacts before advancing the healthy release channel.
-Do not ask for a routine release approval or push a version tag by hand. Keep the
-source version line `0.<minor>.0` coherent in the Rust and worker manifests and
-lockfiles; CI owns the revision-derived patch. Preserve split build/signing
-privileges, exact Sigstore verification, and private canonical evidence.
+Green `ci` push runs on `master` prepare a release-please PR. Its merged version
+commit follows the existing signed Linux bundle and healthy-channel path.
+Keep generator output coherent; never allocate another version or tag by hand.
+Local baseline/custody decisions: [ADR 001](docs/adr/001-release-metadata.md).
+Preserve split build/signing privileges, exact Sigstore verification, and private
+canonical evidence.
 Use [docs/verification.md](docs/verification.md#release-and-recovery) for deployed
 artifact smoke, rollback, and the no-mutation agent alert delivery probe.

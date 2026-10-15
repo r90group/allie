@@ -153,18 +153,16 @@ allie publication --verify-root .allie/verify/latest --out .allie/public/latest
 When working from a source checkout instead of a release bundle, run `npm ci`
 and `npx playwright install chromium` in the Allie checkout once. The
 `ALLIE_BROWSER_WORKER` override remains available only for nonstandard layouts.
-Allie releases stay on the pre-stable `v0.x` line. Every successful `ci` push run
-on `master` automatically builds and publishes its exact revision; no operator
-tag or release approval is needed. The source manifests and lockfiles agree on
-`0.<minor>.0`, checked on every PR. After the full source gate, CI derives the
-patch from the full first-parent commit count and stages it in both Rust and
-browser-worker manifests/locks before packaging. The signed archive includes
-`release.json` binding its version and source SHA. Only the reviewed source
-release line changes in Git;
-there are no bot version-bump commits.
+Release-please generates versions and [CHANGELOG.md](CHANGELOG.md) from reviewed
+Conventional Commits in a release PR. After exact-head CI and agent readback,
+its merged version commit automatically publishes through the existing signed
+artifact workflow; no operator tag or new publisher is needed. Source manifests
+and lockfiles keep that generated version. The signed archive contains
+`release.json` binding its version/source SHA and the canonical release notes.
+See [ADR 001](docs/adr/001-release-metadata.md) for baseline and custody.
 
 Builds have read-only credentials. The separate minimal OIDC signing job creates
-the matching tag automatically, generates GitHub notes, and publishes only the
+the matching tag automatically, uses the signed canonical notes, and publishes only the
 three named assets after exact API readback; failed drafts are deleted. A
 read-only post-publication job downloads those real assets, verifies the checksum,
 exact GitHub Actions signer, signed revision/version, and installed

@@ -9,12 +9,33 @@ on:
 permissions: {}
 
 jobs:
-  build-release:
+  select-release:
     if: >-
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'master' &&
       github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - id: version
+        run: node scripts/prepare-release.mjs --select
+
+  build-release:
+    needs: select-release
+    if: needs.select-release.outputs.publish == 'true'
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     runs-on: ubuntu-22.04
@@ -78,6 +99,8 @@ jobs:
           tar -xzOf dist/allie-linux-x64.tar.gz allie/release.json |
             jq -e --arg version "${RELEASE_TAG#v}" --arg sha "$RELEASE_SHA" \
               '.schema == "allie.distribution.v1" and .version == $version and .git_sha == $sha'
+          tar -xzOf dist/allie-linux-x64.tar.gz allie/RELEASE_NOTES.md > dist/RELEASE_NOTES.md
+          test -s dist/RELEASE_NOTES.md
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -98,8 +121,8 @@ jobs:
         run: |
           set -euo pipefail
           tag="$RELEASE_TAG"
-          [[ "$tag" =~ ^v0\.[0-9]+\.[0-9]+$ ]] || {
-            echo "Release tag must match v0.x.y, got $tag" >&2
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Release tag must be stable SemVer, got $tag" >&2
             exit 1
           }
           release_id=
@@ -135,7 +158,7 @@ jobs:
             -f target_commitish="$RELEASE_SHA" \
             -f make_latest=false \
             -F draft=true \
-            -F generate_release_notes=true \
+            -F body=@dist/RELEASE_NOTES.md \
             --jq .id)
           created=true
           test -n "$release_id"
@@ -208,10 +231,10 @@ jobs:
           set -euo pipefail
           latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
           # A slower build of an older merge must not rewind the update channel.
-          [[ "$latest" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
-          IFS=. read -r _ minor patch <<< "$RELEASE_TAG"
-          IFS=. read -r _ latest_minor latest_patch <<< "$latest"
-          if (( minor > latest_minor || (minor == latest_minor && patch > latest_patch) )); then
+          [[ "$latest" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          IFS=. read -r major minor patch <<< "${RELEASE_TAG#v}"
+          IFS=. read -r latest_major latest_minor latest_patch <<< "${latest#v}"
+          if (( major > latest_major || (major == latest_major && minor > latest_minor) || (major == latest_major && minor == latest_minor && patch > latest_patch) )); then
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
               -f make_latest=true >/dev/null
             observed=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
