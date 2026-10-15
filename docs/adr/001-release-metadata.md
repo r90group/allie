@@ -23,8 +23,13 @@ and the release manifest must agree; packaging only validates them.
 
 The existing trusted green-master workflow still owns the tag, read-only build,
 isolated OIDC signing, exactly three release assets, downloaded signature/runtime
-smoke, serialized healthy-channel promotion, and independent quarantine. Only a
-version-changing release commit is a publish candidate. An existing identical
+smoke, serialized healthy-channel promotion, and independent quarantine.
+Successful exact-source publication clears its generated PR's native
+`autorelease: pending` label; otherwise release-please refuses the next PR.
+The isolated publisher gets PR-write solely for this lifecycle, never a checkout.
+The GitHub Release remains publication truth, not a second `tagged` label;
+publication still does not mean healthy. Only a version-changing release commit
+is a publish candidate. An existing identical
 tag is a no-op; a conflicting tag, decreasing version, or false release title
 refuses. No signing key, credential, publisher, model, or updater is added.
 CHANGELOG.md's current entry is embedded in the signed archive and used verbatim

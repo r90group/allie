@@ -52,9 +52,10 @@ function validateReleaseWorkflow(text) {
     exactKeys(jobs[name].permissions, ['contents'], `${name} permissions`);
     if (jobs[name].permissions.contents !== 'write') fail(`${name} may only mutate release state`);
   }
-  exactKeys(jobs['sign-and-publish'].permissions, ['contents', 'id-token'], 'signing permissions');
+  exactKeys(jobs['sign-and-publish'].permissions, ['contents', 'id-token', 'pull-requests'], 'signing permissions');
   if (jobs['sign-and-publish'].permissions.contents !== 'write' ||
-      jobs['sign-and-publish'].permissions['id-token'] !== 'write') fail('Only isolated signing gets OIDC');
+      jobs['sign-and-publish'].permissions['id-token'] !== 'write' ||
+      jobs['sign-and-publish'].permissions['pull-requests'] !== 'write') fail('Only isolated signing gets OIDC and completes the release PR');
   const build = jobs['build-release'];
   const signer = jobs['sign-and-publish'];
   const smoke = jobs['smoke-published'];
@@ -124,6 +125,12 @@ function validateReleaseWorkflow(text) {
       !run.includes('-f make_latest=false') || !run.includes('trap cleanup EXIT') ||
       !run.includes('gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$release_id"')) {
     fail('Publication must bind the revision, keep healthy latest, and remove failed drafts');
+  }
+  if (run.indexOf('gh pr edit "$release_pr"') < publishAt ||
+      !run.includes('.merge_commit_sha == env.RELEASE_SHA') ||
+      !run.includes('.head.ref == "release-please--branches--master"') ||
+      !run.includes("--remove-label 'autorelease: pending'")) {
+    fail('Only successful exact-source publication may complete release-please label custody');
   }
 }
 

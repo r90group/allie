@@ -81,6 +81,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pull-requests: write
     outputs:
       release_id: ${{ steps.publish.outputs.release_id }}
     steps:
@@ -125,6 +126,12 @@ jobs:
             echo "Release tag must be stable SemVer, got $tag" >&2
             exit 1
           }
+          release_pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_SHA/pulls" --jq '
+            [.[] | select(.merged_at != null and .merge_commit_sha == env.RELEASE_SHA and
+              .base.ref == "master" and .head.repo.full_name == env.GITHUB_REPOSITORY and
+              .head.ref == "release-please--branches--master" and
+              .title == ("chore(master): release " + (env.RELEASE_TAG | ltrimstr("v"))))] |
+            if length == 1 then .[0].number else error("Expected one exact merged release PR") end')
           release_id=
           created=false
 
@@ -138,7 +145,6 @@ jobs:
             exit "$status"
           }
           trap cleanup EXIT
-
 
           # GitHub may defer creating a draft's tag until publication. Bind it
           # explicitly, without overwriting an existing ref on a retry.
@@ -188,6 +194,15 @@ jobs:
             -F draft=false -f make_latest=false >/dev/null
           created=false
           echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" | jq -e \
+            --arg tag "$RELEASE_TAG" --arg sha "$RELEASE_SHA" --rawfile notes dist/RELEASE_NOTES.md \
+            '.draft == false and .tag_name == $tag and .target_commitish == $sha and .body == $notes'
+          # The existing publisher completes release-please's native lifecycle.
+          gh pr edit "$release_pr" --repo "$GITHUB_REPOSITORY" \
+            --remove-label 'autorelease: pending'
+          gh pr view "$release_pr" --repo "$GITHUB_REPOSITORY" --json labels --jq \
+            '[.labels[].name] | index("autorelease: pending") == null' | \
+            jq -e '. == true'
 
   smoke-published:
     needs: [build-release, sign-and-publish]
