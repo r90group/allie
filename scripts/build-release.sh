@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Same credential-free production artifact path for PRs and trusted master.
-# Version preparation changes only this disposable CI checkout's four manifests.
+# Validate generator output; never derive or mutate another version here.
 dist=${1:-dist}
 tag=$(node scripts/prepare-release.mjs)
 sha=$(git rev-parse HEAD)

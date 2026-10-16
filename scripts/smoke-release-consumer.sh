@@ -6,7 +6,7 @@ set -euo pipefail
 bundle=$(realpath "${1:?usage: smoke-release-consumer.sh BUNDLE TAG SHA}")
 tag=${2:?usage: smoke-release-consumer.sh BUNDLE TAG SHA}
 sha=${3:?usage: smoke-release-consumer.sh BUNDLE TAG SHA}
-[[ "$tag" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
+[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
 root=$(mktemp -d "${TMPDIR:-/tmp}/allie-consumer-smoke.XXXXXX")
 trap 'rm -rf "$root"' EXIT
