@@ -62,7 +62,9 @@ src/worker.rs	490
 src/worker/axe.rs	40
 src/worker/tests.rs	50
 src/standards.rs	450
-src/discovery/live.rs	420
+# Directory-path normalization plus its external regression-module declaration
+# adds ten lines; keep this narrow change in the existing URL implementation.
+src/discovery/live.rs	430
 src/cli.rs	360
 src/release.rs	330
 src/consumer/tests.rs	320
