@@ -43,10 +43,13 @@ The browser worker smoke, V0 evidence smoke, consumer contract smoke, release pr
 - Do not block releases on model-only findings.
 - Do not weaken deterministic gates to make a run green.
 
-
 ## Merging
 
-`master` requires the `verify` check and enforces it for admins. Merge the exact green source with `gh pr merge --squash --match-head-commit <sha>`. Never use `--admin`; read the block instead: a missing or red `verify`, a head that moved, or a conflict with `master`.
+`master` protection applies to admins but configures no required status checks or
+approving reviews; repository auto-merge is disabled. Wait for the current head's
+`ci` checks (`verify`, `supply-chain-audit`, and PR-only `release-preflight`) to
+pass, then merge with `gh pr merge <pr> --squash --match-head-commit <sha>`.
+Never use `--admin`; inspect failed checks, a changed head, or merge conflicts.
 
 ## Continuous release
 
