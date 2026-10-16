@@ -1,5 +1,7 @@
 # Repository Instructions
 
+Shared standard: [Constitution](https://foundations.mistystep.io/) and [Way of working](https://foundations.mistystep.io/way-of-working).
+
 This repo is Rust-first. Keep non-Rust surfaces behind narrow process or schema boundaries.
 
 ## Gates
@@ -41,17 +43,10 @@ The browser worker smoke, V0 evidence smoke, consumer contract smoke, release pr
 - Do not block releases on model-only findings.
 - Do not weaken deterministic gates to make a run green.
 
-## Closeout
-
-Every meaningful change should state:
-
-- the exact product behavior or doc contract changed;
-- the command that verified it;
-- residual unverified paths.
 
 ## Merging
 
-`master` requires the `verify` check and enforces it for admins. No approving review is required, so an agent PR merges on a green `verify` plus a model review: `gh pr merge --squash --match-head-commit <sha>`. Never use `--admin`; read the block instead: a missing or red `verify`, a head that moved past the reviewed SHA, or a conflict with `master`.
+`master` requires the `verify` check and enforces it for admins. Merge the exact green source with `gh pr merge --squash --match-head-commit <sha>`. Never use `--admin`; read the block instead: a missing or red `verify`, a head that moved, or a conflict with `master`.
 
 ## Continuous release
 
