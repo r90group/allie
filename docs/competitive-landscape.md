@@ -400,8 +400,8 @@ does not authorize integrations, provider calls, or feature expansion.
 - **Evidence artifacts and replay:** Help content documents DCI Accessibility
   score changes when new rules are enabled; reviewed pages did not establish
   portable revision-bound replay artifacts.
-- **Manual review workflow:** Vendor explicitly offers manual audits, workshops,
-  VPAT writing, and education alongside automation.
+- **Manual review workflow:** Vendor explicitly offers certified-expert manual
+  testing, consulting, education, VPATs, and training alongside automation.
 - **AI/agentic claims:** Marketing promotes accessibility agents; help documents
   opt-in AI-supported checks for descriptive page titles and headings. Its
   statement of three new rules conflicts with the two rules actually listed.

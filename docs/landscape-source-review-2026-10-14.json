@@ -16,6 +16,14 @@
     "requested_urls": 80,
     "canonical_and_requested_urls": 84
   },
+  "fact_check": {
+    "date": "2026-10-16",
+    "scope": "Independent re-retrieval of all 67 cited URLs and the 9 superseded or redirected prior URLs; every material claim in all 17 records checked against the retrieved primary-source text.",
+    "result": "All 67 cited URLs returned HTTP 200 and all recorded redirects reproduced. All material claims were supported except one: no cited Siteimprove page offers workshops.",
+    "corrections": [
+      "Siteimprove manual review workflow now names the services its platform page lists (certified-expert manual testing, consulting, education, VPATs and training) instead of manual audits, workshops and VPAT writing."
+    ]
+  },
   "sources": [
     {
       "url": "https://github.com/dequelabs/axe-core",
