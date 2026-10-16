@@ -221,3 +221,35 @@ And it produces:
 - `cargo test --locked` green.
 
 It proves the packet pipeline, not the full point-and-shoot contract above.
+
+## Allie Tool Release Distribution (Shipped)
+
+As a consuming engineer, I can identify an Allie tool release, read what changed,
+and install a verified bundle without checking out Allie's source. This is the
+tool's distribution contract, distinct from its accessibility release verdicts.
+
+- The published channel supplies Linux x86-64 bundles for glibc 2.35 or newer,
+  identified by pre-stable `v0.<minor>.<patch>` versions. The signed bundle records
+  its version and exact source revision; the installed tool reports that version
+  in its evidence. Current patches identify source revisions, not a promise that
+  every patch contains only backward-compatible fixes.
+- Each release's [GitHub Release](https://github.com/r90group/allie/releases)
+  makes its automatically generated change notes and source comparison reachable
+  alongside the archive, checksum manifest, and Sigstore signature bundle.
+- Consumers verify the checksum and exact trusted workflow signer before
+  extracting or running a download. A changed archive or unexpected signer is
+  rejected, not installed as a fallback.
+- Publication alone does not make a candidate healthy. GitHub's `latest` channel
+  advances only after the downloaded, authenticated bundle passes the installed
+  consumer journey. Failed-smoke candidates become prereleases; the previous
+  healthy channel remains available. A slower older release cannot rewind it.
+- Consumers can explicitly select a previous verified release and repeat the
+  same verification and local consumer journey. Reinstalling a tool is not proof
+  of live channel rollback or compatibility with every consumer's retained data.
+
+Installation and recovery commands live in the [README](README.md#consumer-contract)
+and [verification runbook](docs/verification.md#release-and-recovery).
+Compatibility-based SemVer bump selection and a canonical changelog shared with
+the signed archive remain unverified in the published channel; they are not
+current guarantees. Nor does distribution proof establish full point-and-shoot,
+live-provider, human-review, or legal-compliance acceptance.

@@ -1,0 +1,1222 @@
+{
+  "review_date": "2026-10-14",
+  "scope": "All 17 competitive-landscape records and all ten fields; all 49 previously cited URLs inspected.",
+  "method": "Read-only inspection of primary-source public web text and relevant official documentation. No product execution, accounts, live providers or security audit.",
+  "limitations": [
+    "Inspection date is not publication or product-launch date. Web extraction may use recently crawled/indexed text.",
+    "Documentation/marketing establishes what sources state; it does not establish effectiveness, coverage or contractual security guarantees.",
+    "Not established in reviewed sources does not mean a competing capability is absent.",
+    "Allie differentiation fields are strategic proposals and do not establish exclusivity or implemented capability.",
+    "Mutable documentation and GitHub branches are not release-pinned behavior."
+  ],
+  "counts": {
+    "records": 17,
+    "original_citations": 49,
+    "current_citations": 67,
+    "requested_urls": 80,
+    "canonical_and_requested_urls": 84
+  },
+  "fact_check": {
+    "date": "2026-10-16",
+    "scope": "Independent re-retrieval of all 67 cited URLs and the 9 superseded or redirected prior URLs; every material claim in all 17 records checked against the retrieved primary-source text.",
+    "result": "All 67 cited URLs returned HTTP 200 and all recorded redirects reproduced. All material claims were supported except one: no cited Siteimprove page offers workshops.",
+    "corrections": [
+      "Siteimprove manual review workflow now names the services its platform page lists (certified-expert manual testing, consulting, education, VPATs and training) instead of manual audits, workshops and VPAT writing."
+    ]
+  },
+  "sources": [
+    {
+      "url": "https://github.com/dequelabs/axe-core",
+      "canonical_url": "https://github.com/dequelabs/axe-core",
+      "checked_date": "2026-10-14",
+      "source_type": "project documentation",
+      "claim": "Engine integration, partial standards coverage, and incomplete/manual-review results.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Deque axe-core"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.deque.com/axe/axe-core/",
+      "canonical_url": "https://www.deque.com/axe/axe-core/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "WCAG-version/level positioning and test-framework integration; coverage is not a conformance guarantee.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Deque axe-core"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/dequelabs/axe-core/blob/develop/doc/API.md",
+      "canonical_url": "https://github.com/dequelabs/axe-core/blob/develop/doc/API.md",
+      "checked_date": "2026-10-14",
+      "source_type": "API documentation",
+      "claim": "Result categories, WCAG tags and element targets support artifact description.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public develop-branch documentation is mutable; no release-specific execution verified.",
+      "previously_cited": false,
+      "records": [
+        "Deque axe-core"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.ftc.gov/news-events/news/press-releases/2025/04/ftc-approves-final-order-requiring-accessibe-pay-1-million",
+      "canonical_url": "https://www.ftc.gov/news-events/news/press-releases/2025/04/ftc-approves-final-order-requiring-accessibe-pay-1-million",
+      "checked_date": "2026-10-14",
+      "source_type": "regulator announcement",
+      "claim": "Final April 2025 order requires $1 million and substantiation for automated compliance representations.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "accessiBe and accessibility overlays"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.ftc.gov/legal-library/browse/cases-proceedings/2223156-accessibe-inc",
+      "canonical_url": "https://www.ftc.gov/legal-library/browse/cases-proceedings/2223156-accessibe-inc",
+      "checked_date": "2026-10-14",
+      "source_type": "regulator case record",
+      "claim": "Timeline confirms final order; summary distinguishes allegations from settlement.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Page still labels case Pending despite its final-order timeline; do not infer absence of final order.",
+      "previously_cited": true,
+      "records": [
+        "accessiBe and accessibility overlays"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.ftc.gov/system/files/ftc_gov/pdf/d-o.222_3156_-_accessibe_final_consent_package_without_signatures-2.pdf",
+      "canonical_url": "https://www.ftc.gov/system/files/ftc_gov/pdf/d-o.222_3156_-_accessibe_final_consent_package_without_signatures-2.pdf",
+      "checked_date": "2026-10-14",
+      "source_type": "regulator order PDF",
+      "claim": "Order part I requires non-misleading representations supported by competent reliable evidence.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Text extraction inspected; no legal advice or general finding against all overlays.",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://accessibe.com/accesswidget",
+      "canonical_url": "https://accessibe.com/accesswidget",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Current widget adjustments, reports, AI assistant, expert services and SOC 2 assertions.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Marketing page references both WCAG 2.2 AA and 2.1 AA; efficacy/security not independently verified.",
+      "previously_cited": false,
+      "records": [
+        "accessiBe and accessibility overlays"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://accessibe.com/accessflow",
+      "canonical_url": "https://accessibe.com/accessflow",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Separate developer product linked from accessWidget.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Retrieved page title is pricing-oriented; not used to infer detailed CI behavior.",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://www.deque.com/axe/",
+      "canonical_url": "https://www.deque.com/axe/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Suite spans testing, monitoring, manual auditing and AI positioning.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Deque axe DevTools and axe Platform"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.deque.com/axe/devtools/extension/",
+      "canonical_url": "https://www.deque.com/axe/devtools/extension/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Extension exports, screenshots/permalinks, guided testing and AI assistance.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Deque axe DevTools and axe Platform"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://docs.deque.com/devtools-for-web/4/en/devtools-igt/",
+      "canonical_url": "https://docs.deque.com/devtools-for-web/4/en/devtools-igt/",
+      "checked_date": "2026-10-14",
+      "source_type": "product documentation",
+      "claim": "Auto Replay is documented for three named IGTs, with answer reuse and change detection.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Documentation not execution; scope restriction retained. Page carries a personal-data warning.",
+      "previously_cited": true,
+      "records": [
+        "Deque axe DevTools and axe Platform"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.deque.com/accessible-development/ci-cd/",
+      "canonical_url": "https://www.deque.com/accessible-development/ci-cd/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Watcher/API CI integration, PR linting and blocking are explicit claims.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Deque axe DevTools and axe Platform"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.deque.com/axe/mcp-server/",
+      "canonical_url": "https://www.deque.com/axe/mcp-server/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "AI coding-agent remediation with review/apply/reject and general enterprise-security positioning.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Deque axe DevTools and axe Platform"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/",
+      "canonical_url": "https://www.evinced.com/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Current category and AI detection, organization and integration positioning.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/technology",
+      "canonical_url": "https://www.evinced.com/technology",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Visual/semantic analysis, DOM mutations, component clustering and stable issue tracking.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Comparative superiority and quantitative detection claims were not adopted as established facts.",
+      "previously_cited": true,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/blog/introduction-to-test-automation-for-accessibility-managers",
+      "canonical_url": "https://www.evinced.com/blog/introduction-to-test-automation-for-accessibility-managers/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor educational article",
+      "claim": "Automation complements human assessment and can be integrated into CI.",
+      "outcome": "Retrieved; redirect followed",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/products/auto-test-sdks",
+      "canonical_url": "https://www.evinced.com/products/auto-test-sdks",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Configurable build failures, framework integrations and machine-readable reports.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.evinced.com/",
+      "canonical_url": "https://developer.evinced.com/",
+      "checked_date": "2026-10-14",
+      "source_type": "documentation index",
+      "claim": "Used to locate official web report and Playwright SDK documentation.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://developer.evinced.com/sdks-for-web-apps/web-reports",
+      "canonical_url": "https://developer.evinced.com/sdks-for-web-apps/web-reports/",
+      "checked_date": "2026-10-14",
+      "source_type": "API documentation",
+      "claim": "Structured issue metadata, WCAG tags, DOM snippets and report examples.",
+      "outcome": "Retrieved; redirect followed",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.evinced.com/sdks-for-web-apps/playwright-js-sdk",
+      "canonical_url": "https://developer.evinced.com/sdks-for-web-apps/playwright-js-sdk/",
+      "checked_date": "2026-10-14",
+      "source_type": "product documentation",
+      "claim": "Playwright integration, offline authentication option, optional uploads and AI skills.",
+      "outcome": "Retrieved; redirect followed",
+      "retrieval_limitations": "Customer credentials/package needed for execution; neither requested nor accessed.",
+      "previously_cited": false,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/ai/enterprises",
+      "canonical_url": "https://www.evinced.com/ai/enterprises",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Hosted/on-premise AI options and retention customization; not universal SDK architecture.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.evinced.com/products/mcp-tools",
+      "canonical_url": "https://www.evinced.com/products/mcp-tools",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Coding-agent MCP integration is advertised; benchmark superiority was not adopted.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Evinced"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/",
+      "canonical_url": "https://www.levelaccess.com/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Platform, services, remediation and AI are current positioning.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Level Access"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/accessibility-statement/",
+      "canonical_url": "https://www.levelaccess.com/accessibility-statement/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor statement",
+      "claim": "Separate platform standards-support paragraph supports WCAG A/AA, Section 508, EN 301 549.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Own-site WCAG 2.2 AA commitment is distinct from platform testing coverage; not conflated.",
+      "previously_cited": true,
+      "records": [
+        "Level Access"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/blog/automated-accessibility-testing-a-practical-guide-to-wcag-coverage/",
+      "canonical_url": "https://www.levelaccess.com/blog/automated-accessibility-testing-a-practical-guide-to-wcag-coverage/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor educational article",
+      "claim": "Automation has limits; human expert and disability-user assessment remain necessary.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Level Access"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/level-ci/",
+      "canonical_url": "https://www.levelaccess.com/level-ci/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Pre-merge gates, delta findings, PR suggestions and WCAG 2.0/2.1-through-AAA rule claims.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": false,
+      "records": [
+        "Level Access"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/ai-accessibility-agents/",
+      "canonical_url": "https://www.levelaccess.com/ai-accessibility-agents/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "AI reporting/filtering/summaries, integrations and security assertions.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Certification reports, sensitive-data scope and effectiveness were not independently inspected.",
+      "previously_cited": false,
+      "records": [
+        "Level Access"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.levelaccess.com/request-a-demo/",
+      "canonical_url": "https://www.levelaccess.com/request-a-demo/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor form",
+      "claim": "Level CI Learn more link resolves to demo form.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Read only; no form submitted or provider contacted.",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://www.siteimprove.com/platform/accessibility/web-accessibility-software/",
+      "canonical_url": "https://www.siteimprove.com/platform/accessibility/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor marketing",
+      "claim": "Current canonical page markets agents, MCP/CI, and manual services; old exact coverage wording absent.",
+      "outcome": "Retrieved; redirect followed",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Siteimprove"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.siteimprove.com/web-accessibility-compliance/",
+      "canonical_url": "https://www.siteimprove.com/web-accessibility-compliance/",
+      "checked_date": "2026-10-14",
+      "source_type": "vendor educational/marketing",
+      "claim": "WCAG and regulatory context; not product coverage proof.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Public text only; no product execution or account access.",
+      "previously_cited": true,
+      "records": [
+        "Siteimprove"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://help.siteimprove.com/support/solutions/articles/80001183313-expanding-wcag-coverage-with-new-ai-supported-rules",
+      "canonical_url": "https://help.siteimprove.com/support/solutions/articles/80001183313-expanding-wcag-coverage-with-new-ai-supported-rules",
+      "checked_date": "2026-10-14",
+      "source_type": "product help documentation",
+      "claim": "Opt-in AI title/heading checks affect scores; source describes gradual rollout.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Modified 2026-05-21. Text says three new rules but lists two; preserve discrepancy rather than invent third.",
+      "previously_cited": true,
+      "records": [
+        "Siteimprove"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.browserstack.com/accessibility-testing",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.browserstack.com/accessibility-testing",
+      "source_type": "marketing",
+      "claim": "Category, automation, standards, manual workflow",
+      "outcome": "Retrieved; broader Spectra suite and version/level claims replace axe-only shorthand.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "BrowserStack Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.browserstack.com/docs/automate/selenium/accessibility-testing",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.browserstack.com/docs/accessibility/overview/introduction",
+      "source_type": "redirect stub",
+      "claim": "Original Selenium evidence URL",
+      "outcome": "Retrieved redirect stub; followed its explicit link and read destination docs.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "BrowserStack Accessibility"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.browserstack.com/accessibility-testing/ai-agents",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.browserstack.com/accessibility-testing/ai-agents",
+      "source_type": "marketing",
+      "claim": "AI/agentic claims",
+      "outcome": "Retrieved; detection and remediation are vendor claims, not benchmark results.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "BrowserStack Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.browserstack.com/docs/accessibility/overview/introduction",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.browserstack.com/docs/accessibility/overview/introduction",
+      "source_type": "documentation",
+      "claim": "Automation, manual review, hosted workflow",
+      "outcome": "Retrieved; workflow scanning, assisted testing and screen-reader support documented.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "BrowserStack Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.browserstack.com/accessibility-testing/features/automated-tests",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.browserstack.com/accessibility-testing/features/automated-tests",
+      "source_type": "marketing",
+      "claim": "CI, artifacts, manual gaps",
+      "outcome": "Retrieved; assertions and conformance summaries undermine any claim these are absent.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "BrowserStack Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://saucelabs.com/products/accessibility-testing",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://saucelabs.com/products/accessibility-testing",
+      "source_type": "marketing",
+      "claim": "Category, mobile automation, standards positioning",
+      "outcome": "Retrieved; distinguishes mobile partnership from browser axe-core examples.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Sauce Labs Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://docs.saucelabs.com/basics/integrations/deque/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://docs.saucelabs.com/basics/integrations/deque/",
+      "source_type": "documentation",
+      "claim": "Browser automation, CI, artifacts, account requirement",
+      "outcome": "Retrieved; Accessibility tab/full report documented; old example versions are not current dependency recommendations.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Sauce Labs Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.deque.com/saucelabs/get-started/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.deque.com/saucelabs/get-started/",
+      "source_type": "vendor integration guide",
+      "claim": "Workflow integration and cloud configuration",
+      "outcome": "Retrieved; sample page-state scan and region selection; examples not executed.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Sauce Labs Accessibility"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.getstark.co/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.getstark.co/",
+      "source_type": "marketing",
+      "claim": "Category, automation, manual/governance workflow, AI, security",
+      "outcome": "Retrieved; explicit AI and enterprise-security positioning; certification scope unverified.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Stark"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.getstark.co/blog/source-code-scanning/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.getstark.co/blog/source-code-scanning/",
+      "source_type": "vendor announcement",
+      "claim": "Automation and CI",
+      "outcome": "Retrieved; source scanning claims corroborated with support docs.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Stark"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.getstark.co/blog/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.getstark.co/blog/",
+      "source_type": "vendor index",
+      "claim": "Current AI evidence discovery",
+      "outcome": "Retrieved; generic index replaced by focused docs and dated connector announcement.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://www.getstark.co/support/getting-started/using-source-code-integration/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.getstark.co/support/getting-started/using-source-code-integration/",
+      "source_type": "documentation",
+      "claim": "CLI/ESLint, CI, artifacts, data transmission",
+      "outcome": "Retrieved; token required and result upload documented; no package installed.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "Stark"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.getstark.co/blog/claude-connector/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://www.getstark.co/blog/claude-connector/",
+      "source_type": "vendor announcement dated 2026-08-13",
+      "claim": "AI/agentic claims",
+      "outcome": "Retrieved; concrete connector announcement replaces weak smart-suggestions characterization.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "Stark"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.tpgi.com/arc-platform/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://vispero.com/accessibility-audit-vpat-testing/arc/",
+      "source_type": "redirect to marketing",
+      "claim": "ARC platform",
+      "outcome": "Redirect followed; canonical monitoring page read.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "TPGi ARC Platform and ARC Toolkit"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.tpgi.com/arc-platform/arc-toolkit/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://vispero.com/accessibility-audit-vpat-testing/arc/",
+      "source_type": "redirect to marketing",
+      "claim": "Toolkit source reliability",
+      "outcome": "Redirect points to general ARC page; followed its Toolkit navigation to specific source.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "TPGi ARC Platform and ARC Toolkit"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.tpgi.com/arc-platform/monitoring/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://vispero.com/accessibility-audit-vpat-testing/arc/",
+      "source_type": "redirect to marketing",
+      "claim": "ARC monitoring",
+      "outcome": "Redirect followed; old 2.0/2.1-only characterization updated cautiously.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "TPGi ARC Platform and ARC Toolkit"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://vispero.com/accessibility-audit-vpat-testing/arc/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://vispero.com/accessibility-audit-vpat-testing/arc/",
+      "source_type": "marketing",
+      "claim": "Category, automation, standards, artifacts, manual requirement",
+      "outcome": "Retrieved; explicit manual-testing limitation; detailed CI and privacy guarantees unverified.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "TPGi ARC Platform and ARC Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://vispero.com/lp/arc-toolkit/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://vispero.com/lp/arc-toolkit/",
+      "source_type": "marketing/product description",
+      "claim": "Toolkit automation, standards, artifacts, manual aids",
+      "outcome": "Retrieved via official navigation; page-level 2.1 A/AA scope retained separately.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "TPGi ARC Platform and ARC Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://applitools.com/platform/validate/accessibility/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://applitools.com/solutions/accessibility-testing/",
+      "source_type": "redirect to marketing",
+      "claim": "Contrast Advisor product source",
+      "outcome": "Redirect followed; canonical content read.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "Applitools Contrast Advisor"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://applitools.com/docs/eyes/concepts/test-execution/accessibility-testing",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://applitools.com/docs/eyes/concepts/test-execution/accessibility-testing",
+      "source_type": "documentation",
+      "claim": "Automation, criteria, SDK, artifacts and manual review",
+      "outcome": "Retrieved; explicitly no baseline comparison for contrast measurement.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": true,
+      "records": [
+        "Applitools Contrast Advisor"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://applitools.com/lp/accessibility-testing/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://applitools.com/solutions/accessibility-testing/",
+      "source_type": "redirect to marketing",
+      "claim": "Visual AI product source",
+      "outcome": "Redirect followed; duplicates product destination.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation. Original redirect pages are not independent capability evidence.",
+      "previously_cited": true,
+      "records": [
+        "Applitools Contrast Advisor"
+      ],
+      "original_url_cited": false,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://applitools.com/solutions/accessibility-testing/",
+      "checked_date": "2026-10-14",
+      "canonical_url": "https://applitools.com/solutions/accessibility-testing/",
+      "source_type": "marketing",
+      "claim": "AI, configuration and privacy posture",
+      "outcome": "Retrieved; local-processing claim changes prior hosted-only characterization; not independently tested.",
+      "retrieval_limitations": "Public text retrieved; no authenticated access or functional validation.",
+      "previously_cited": false,
+      "records": [
+        "Applitools Contrast Advisor"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://accessibilityinsights.io/docs/web/overview/",
+      "canonical_url": "https://accessibilityinsights.io/docs/web/overview/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Extension/FastPass and telemetry supported. Overview still names WCAG 2.1 AA; conflicts with Assessment.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; checked content is not installed extension behavior.",
+      "previously_cited": true,
+      "records": [
+        "Accessibility Insights"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://accessibilityinsights.io/docs/web/getstarted/assessment/",
+      "canonical_url": "https://accessibilityinsights.io/docs/web/getstarted/assessment/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "WCAG 2.2 AA; guided requirements, HTML/JSON and saved assessments supported. Corrects old 2.1-only claim.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; inconsistency retained explicitly.",
+      "previously_cited": true,
+      "records": [
+        "Accessibility Insights"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://accessibilityinsights.io/docs/web/reference/faq/",
+      "canonical_url": "https://accessibilityinsights.io/docs/web/reference/faq/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Partial coverage, pipeline examples, no cross-state aggregation, local scan storage and opt-in telemetry supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; no network/privacy audit performed.",
+      "previously_cited": true,
+      "records": [
+        "Accessibility Insights"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://pa11y.org/",
+      "canonical_url": "https://pa11y.org/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "CLI/CI/dashboard/webservice family supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; family overview rather than version-specific test.",
+      "previously_cited": true,
+      "records": [
+        "Pa11y"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/pa11y/pa11y",
+      "canonical_url": "https://github.com/pa11y/pa11y",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Runners, configured states/actions, screenshots, reports and WCAG options supported; prior differentiation underplayed these.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; no execution.",
+      "previously_cited": true,
+      "records": [
+        "Pa11y"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/pa11y/pa11y-ci",
+      "canonical_url": "https://github.com/pa11y/pa11y-ci",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "URL/sitemap/local-file CI, thresholds/exit codes and explicit conformance disclaimer supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; no execution.",
+      "previously_cited": true,
+      "records": [
+        "Pa11y"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.chrome.com/docs/lighthouse/overview",
+      "canonical_url": "https://developer.chrome.com/docs/lighthouse/overview",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "DevTools/CLI/Node, reports, local authenticated-page auditing and optional sharing supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; not comprehensive for newer agent features.",
+      "previously_cited": true,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.chrome.com/docs/lighthouse/accessibility/scoring",
+      "canonical_url": "https://developer.chrome.com/docs/lighthouse/accessibility/scoring",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Weighted accessibility scoring supported; manual and low-impact/best-practice checks excluded.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; no score interpreted as conformance.",
+      "previously_cited": true,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/GoogleChrome/lighthouse",
+      "canonical_url": "https://github.com/GoogleChrome/lighthouse",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Saved artifacts, re-auditing, HTML/JSON, local reports and optional error reporting supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; no telemetry verification or replay test.",
+      "previously_cited": true,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://wave.webaim.org/",
+      "canonical_url": "https://wave.webaim.org/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Browser/hosted/API family and stand-alone CI deployment supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; no page submitted for evaluation.",
+      "previously_cited": true,
+      "records": [
+        "WAVE and WebAIM"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://wave.webaim.org/api/",
+      "canonical_url": "https://wave.webaim.org/api/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Remote URL analysis, JSON/XML and XPath reporting supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Documentation only; no key creation or API call.",
+      "previously_cited": true,
+      "records": [
+        "WAVE and WebAIM"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://wave.webaim.org/extension/",
+      "canonical_url": "https://wave.webaim.org/extension/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Publisher claims browser-contained evaluation with no transmission; explicitly scoped to extension.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; privacy claim not independently tested.",
+      "previously_cited": true,
+      "records": [
+        "WAVE and WebAIM"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.ibm.com/able/toolkit/",
+      "canonical_url": "https://www.ibm.com/able/toolkit/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Lifecycle phases and tools/guidance supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable public page; private IBM links not visited.",
+      "previously_cited": true,
+      "records": [
+        "IBM Equal Access Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.ibm.com/able/toolkit/verify/automated/",
+      "canonical_url": "https://www.ibm.com/able/toolkit/verify/automated/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Partial automated coverage and required manual/screen-reader follow-on supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; retrieval reported crawl four days earlier.",
+      "previously_cited": true,
+      "records": [
+        "IBM Equal Access Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/ibma/equal-access",
+      "canonical_url": "https://github.com/ibma/equal-access",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Extensions, CI integrations, baselines and WCAG/508 topics supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; topic tags are not complete coverage proof.",
+      "previously_cited": true,
+      "records": [
+        "IBM Equal Access Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.w3.org/WAI/test-evaluate/tools/list/",
+      "canonical_url": "https://www.w3.org/WAI/test-evaluate/tools/list/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Directory and provider-submitted/non-endorsed nature supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Long filterable page; introduction inspected, not every product entry.",
+      "previously_cited": true,
+      "records": [
+        "W3C WAI tools list and ACT Rules"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.w3.org/WAI/standards-guidelines/act/",
+      "canonical_url": "https://www.w3.org/WAI/standards-guidelines/act/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Automated/semi-automated/manual scope supported; overview records Rules Format 1.1 in February 2026.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; not the normative specification itself.",
+      "previously_cited": true,
+      "records": [
+        "W3C WAI tools list and ACT Rules"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.w3.org/WAI/standards-guidelines/act/rules/",
+      "canonical_url": "https://www.w3.org/WAI/standards-guidelines/act/rules/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "WCAG 2.2/ARIA scope, informative status and rule-status distinctions supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Dynamic count placeholders unpopulated; no counts claimed.",
+      "previously_cited": true,
+      "records": [
+        "W3C WAI tools list and ACT Rules"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/GoogleChrome/lighthouse/blob/main/docs/user-flows.md",
+      "canonical_url": "https://github.com/GoogleChrome/lighthouse/blob/main/docs/user-flows.md",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Scripted flow snapshots support accessibility; timespans do not include that category.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; no flow executed.",
+      "previously_cited": false,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/GoogleChrome/lighthouse-ci",
+      "canonical_url": "https://github.com/GoogleChrome/lighthouse-ci",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Continuous running, storage/retrieval and result assertions supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "README readable; no hosted service tested.",
+      "previously_cited": false,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.chrome.com/docs/devtools/agents/use-cases/lighthouse-audit",
+      "canonical_url": "https://developer.chrome.com/docs/devtools/agents/use-cases/lighthouse-audit",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Explicit AI coding-agent invocation/interpretation workflow; supersedes old blanket no-agent claim.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Examples describe possible agent behavior, not guaranteed fixes.",
+      "previously_cited": false,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring",
+      "canonical_url": "https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Experimental deterministic machine-interaction audits, Chrome 150+ and WebMCP origin-trial conditions.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Not AI verdicts on human accessibility; not exercised.",
+      "previously_cited": false,
+      "records": [
+        "Lighthouse and Chrome DevTools audits"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://wave.webaim.org/help",
+      "canonical_url": "https://wave.webaim.org/help",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "WCAG 2.2/508-related checks, human review and differing scripted-page results supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Documentation only; no comparative scan.",
+      "previously_cited": false,
+      "records": [
+        "WAVE and WebAIM"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://github.com/IBMa/equal-access/blob/main-4.x/accessibility-checker/README.md",
+      "canonical_url": "https://github.com/IBMa/equal-access/blob/main-4.x/accessibility-checker/README.md",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Formats/baselines/rule archive controls supported. External engine/rule loading prevents assuming zero egress.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; crawl five days earlier; mutable branch, not release pin.",
+      "previously_cited": false,
+      "records": [
+        "IBM Equal Access Toolkit"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://www.w3.org/WAI/standards-guidelines/act/rules/about/",
+      "canonical_url": "https://www.w3.org/WAI/standards-guidelines/act/rules/about/",
+      "checked_date": "2026-10-14",
+      "source_type": "official project documentation",
+      "claim": "Partial-check limits, test examples and informative status supported.",
+      "outcome": "Retrieved and inspected",
+      "retrieval_limitations": "Readable; it still links older Format 1.0, unlike overview's 1.1 mention.",
+      "previously_cited": false,
+      "records": [
+        "W3C WAI tools list and ACT Rules"
+      ],
+      "original_url_cited": true,
+      "canonical_url_cited": true
+    },
+    {
+      "url": "https://developer.chrome.com/blog/agent-ready-toolkit",
+      "canonical_url": "https://developer.chrome.com/blog/agent-ready-toolkit",
+      "checked_date": "2026-10-14",
+      "source_type": "official announcement dated 2026-06-22",
+      "claim": "Agent tooling and deterministic Agentic Browsing",
+      "outcome": "Retrieved supplemental corroboration; not needed as a section citation",
+      "retrieval_limitations": "Public-source observation, not an exercised capability",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    },
+    {
+      "url": "https://developer.chrome.com/docs/lighthouse/user-flows",
+      "canonical_url": null,
+      "checked_date": "2026-10-14",
+      "source_type": "attempted supplemental official documentation",
+      "claim": "Lighthouse user-flow documentation",
+      "outcome": "Retrieval internal error; used official GitHub guide instead",
+      "retrieval_limitations": "Not a verified HTTP 404 or evidence that capability is absent",
+      "previously_cited": false,
+      "records": [],
+      "original_url_cited": false,
+      "canonical_url_cited": false
+    }
+  ],
+  "field_semantics": {
+    "url": "Original requested source URL.",
+    "canonical_url": "Destination recorded after source retrieval/redirect, or null after failed retrieval.",
+    "original_url_cited": "True only if url is a literal link in competitive-landscape.md.",
+    "canonical_url_cited": "True only if canonical_url is a literal link in competitive-landscape.md.",
+    "records": "Landscape entries literally citing either the original URL or the recorded canonical destination."
+  }
+}
