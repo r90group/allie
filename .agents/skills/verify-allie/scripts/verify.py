@@ -72,30 +72,30 @@ def main():
     result = {"mode": args.mode, "status": "in_progress", "commands": [],
               "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
               "model": "disabled; provider keys removed from child environment"}
-    with managed_receipt(proof, result) as state, tempfile.TemporaryDirectory(
+    with managed_receipt(proof, result) as cancellation, tempfile.TemporaryDirectory(
             prefix="allie-verify-", dir=cache) as scratch:
         work = Path(scratch)
 
         def run(label, command, expected=0, extra_env=None):
-            check_interrupted(state)
+            check_interrupted(cancellation)
             command = [str(x) for x in command]
             with subprocess.Popen(command, cwd=work, env=env | (extra_env or {}),
                                   text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   start_new_session=True) as process:
-                state["process"] = process
+                cancellation["process"] = process
                 try:
-                    check_interrupted(state)
+                    check_interrupted(cancellation)
                     stdout, stderr = process.communicate(timeout=240)
-                    check_interrupted(state)
+                    check_interrupted(cancellation)
                 except BaseException:
                     kill_owned_group(process)
                     process.communicate()
                     result["commands"].append({"action": label,
-                        "status": "interrupted" if state["signal"] is not None else "failed",
+                        "status": "interrupted" if cancellation["signal"] is not None else "failed",
                         "exit": process.returncode, "child_reaped": True})
                     raise
                 finally:
-                    state["process"] = None
+                    cancellation["process"] = None
             result["commands"].append({"action": label, "argv": [
                 x.replace(str(REPO), "$ALLIE_REPO").replace(str(work), "$RUN")
                 for x in command], "expected_exit": expected, "exit": process.returncode})
