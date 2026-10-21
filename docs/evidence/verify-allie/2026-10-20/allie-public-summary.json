@@ -1,0 +1,22 @@
+{
+  "schema": "allie.public-summary.v0",
+  "status": "needs_review",
+  "exit_code": 0,
+  "generated_at": "2026-10-21T00:41:46.012858913+00:00",
+  "release_status": "needs_review",
+  "run_status": "pass",
+  "blocking": {
+    "deterministic_failures": 0,
+    "scripted_failures": 0,
+    "infrastructure_failures": 0,
+    "missing_required_evidence_count": 0
+  },
+  "wcag": {
+    "pass": 0,
+    "fail": 1,
+    "needs_review": 44,
+    "not_tested": 10
+  },
+  "publication_class": "public_summary",
+  "legal_claim": "evidence visibility only; not a legal compliance guarantee"
+}

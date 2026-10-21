@@ -124,6 +124,9 @@ def raise_scan_error(error):
 
 def scan_file(path, label=None):
     file_path = Path(path)
+    if file_path.is_symlink() and file_path.is_dir():
+        # Directory aliases store link text; canonical tracked files are scanned separately.
+        return scan_text(label or path, os.readlink(file_path))
     if not file_path.is_file():
         raise OSError("secret scan input is not a readable file")
     findings = []
@@ -185,6 +188,25 @@ def self_test():
         raise SystemExit("secret scan self-test failed: finding output was not redacted")
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp)
+        skill = root / "canonical-skill"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("synthetic=" + token)
+        alias = root / "skill-alias"
+        alias.symlink_to("canonical-skill", target_is_directory=True)
+        if scan_file(alias):
+            raise SystemExit("secret scan self-test failed: directory alias is not Git link text")
+        if len(scan_file(skill / "SKILL.md")) != 1:
+            raise SystemExit("secret scan self-test failed: canonical skill secret was missed")
+        file_alias = root / "file-alias"
+        file_alias.symlink_to("canonical-skill/SKILL.md")
+        if len(scan_file(file_alias)) != 1:
+            raise SystemExit("secret scan self-test failed: file alias content was missed")
+        secret_dir = root / token
+        secret_dir.mkdir()
+        secret_alias = root / "secret-alias"
+        secret_alias.symlink_to(token, target_is_directory=True)
+        if len(scan_file(secret_alias)) != 1:
+            raise SystemExit("secret scan self-test failed: secret in link text was missed")
         artifacts = [
             ".allie/verify/latest/run/artifacts/dom-account.html",
             ".allie/verify/latest/run/artifacts/console-account.json",

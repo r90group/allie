@@ -1,0 +1,57 @@
+{
+  "status": "passed",
+  "repository_gate": {
+    "command": "env -u OPENROUTER_API_KEY -u OPENAI_API_KEY TMPDIR=\"$HOME/.cache/tmp\" npm run verify",
+    "exit": 0,
+    "steps": [
+      "cargo fmt --check",
+      "cargo test --locked",
+      "cargo clippy --locked -- -D warnings",
+      "npm run secrets:smoke",
+      "npm run landscape:smoke",
+      "npm run worker:smoke",
+      "npm run evidence:smoke",
+      "npm run axe-rules:smoke",
+      "npm run action:smoke",
+      "npm run auth:smoke",
+      "npm run visibility:smoke",
+      "npm run coverage:smoke",
+      "npm run consumer:smoke",
+      "npm run consumer-cwd:smoke",
+      "npm run distribution:smoke",
+      "npm run agentic:smoke",
+      "npm run agentic:precision",
+      "npm run release-integrity:smoke",
+      "npm run release-workflow:smoke",
+      "npm run release:smoke",
+      "npm run autonomous:smoke",
+      "npm run size:smoke"
+    ],
+    "rust_tests_passed": 158,
+    "rust_tests_failed": 0
+  },
+  "final_secret_scan": {
+    "command": "npm run secrets:smoke",
+    "exit": 0,
+    "regression": "Directory aliases scan Git link text; canonical and file-alias contents still scanned; unreadable files fail closed"
+  },
+  "before_scanner_fix": {
+    "exit": 1,
+    "message": "secret scan failed: an input could not be read",
+    "trigger": "required .claude/skills/verify-allie directory symlink"
+  },
+  "helper_failure_control": {
+    "setup": "Node executable unavailable through an isolated PATH shim",
+    "expected_helper_exit": 1,
+    "actual_helper_exit": 1,
+    "actual_doctor_exit": 2,
+    "proof_status": "failed",
+    "evidence_survived_cleanup": true
+  },
+  "skill_structure": "five feature recipes, valid relative links, executable helper, canonical Claude alias verified",
+  "diff_check": {
+    "command": "git diff --cached --check",
+    "exit": 0
+  },
+  "paid_model_calls": 0
+}
