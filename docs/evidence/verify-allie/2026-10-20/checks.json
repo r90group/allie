@@ -53,5 +53,6 @@
     "command": "git diff --cached --check",
     "exit": 0
   },
-  "paid_model_calls": 0
+  "paid_model_calls": 0,
+  "scope_note": "Initial builder gate predates the independent scanner and signal blockers; corrected controls and gates are in blocker-fixes/checks.json."
 }
