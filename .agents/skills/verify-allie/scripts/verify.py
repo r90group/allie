@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Drive the actual CLI using disposable synthetic consumers; publish count-only proof."""
 import argparse
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -11,6 +12,45 @@ import subprocess
 import tempfile
 
 REPO = Path(__file__).resolve().parents[4]
+
+
+def kill_owned_group(process):
+    if process is not None:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+
+def check_interrupted(state):
+    if state["signal"] is not None:
+        raise SystemExit(128 + state["signal"])
+
+
+@contextmanager
+def managed_receipt(proof, result):
+    state = {"signal": None, "process": None}
+
+    def interrupt(signum, _frame):
+        # Record cancellation even during Popen, before its process is assigned.
+        state["signal"] = state["signal"] or signum
+        kill_owned_group(state["process"])
+
+    previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGINT, signal.SIGTERM)}
+    try:
+        yield state
+        check_interrupted(state)
+    finally:
+        try:
+            if state["signal"] is not None:
+                result["status"] = "interrupted"
+                result["signal"] = signal.Signals(state["signal"]).name
+            elif result["status"] != "passed":
+                result["status"] = "failed"
+            proof.write_text(json.dumps(result, indent=2) + "\n")
+        finally:
+            for sig, handler in previous.items():
+                signal.signal(sig, handler)
 
 
 def main():
@@ -30,25 +70,32 @@ def main():
                 "ALLIE_AGENTIC_WORKER", "GITHUB_REPOSITORY"):
         env.pop(key, None)
     result = {"mode": args.mode, "status": "in_progress", "commands": [],
-              "source_sha": subprocess.check_output(
-                  ["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
               "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
               "model": "disabled; provider keys removed from child environment"}
-    with tempfile.TemporaryDirectory(prefix="allie-verify-", dir=cache) as scratch:
+    with managed_receipt(proof, result) as state, tempfile.TemporaryDirectory(
+            prefix="allie-verify-", dir=cache) as scratch:
         work = Path(scratch)
 
         def run(label, command, expected=0, extra_env=None):
+            check_interrupted(state)
             command = [str(x) for x in command]
             with subprocess.Popen(command, cwd=work, env=env | (extra_env or {}),
                                   text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   start_new_session=True) as process:
+                state["process"] = process
                 try:
+                    check_interrupted(state)
                     stdout, stderr = process.communicate(timeout=240)
+                    check_interrupted(state)
                 except BaseException:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    kill_owned_group(process)
                     process.communicate()
-                    result["commands"].append({"action": label, "status": "interrupted; process group killed"})
+                    result["commands"].append({"action": label,
+                        "status": "interrupted" if state["signal"] is not None else "failed",
+                        "exit": process.returncode, "child_reaped": True})
                     raise
+                finally:
+                    state["process"] = None
             result["commands"].append({"action": label, "argv": [
                 x.replace(str(REPO), "$ALLIE_REPO").replace(str(work), "$RUN")
                 for x in command], "expected_exit": expected, "exit": process.returncode})
@@ -65,6 +112,8 @@ def main():
 
         binary = REPO / "target/debug/allie"
         try:
+            result["source_sha"] = run("read source revision", [
+                "git", "-C", REPO, "rev-parse", "HEAD"]).strip()
             if args.mode == "published":
                 tag = run("resolve healthy release", ["gh", "api", "repos/r90group/allie/releases/latest",
                                                        "--jq", ".tag_name"]).strip()
@@ -157,11 +206,9 @@ def main():
                     assert read("missing/evidence.json")["summary"]["status"] == "error"
                     result["missing_credential"] = "error; exit 2"
             result["status"] = "passed"
-        except Exception:
+        except BaseException:
             result["status"] = "failed"
             raise
-        finally:
-            proof.write_text(json.dumps(result, indent=2) + "\n")
     assert proof.is_file()
     print(f"{args.mode}: {result['status']}; evidence retained after scratch cleanup")
 

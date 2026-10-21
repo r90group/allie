@@ -81,7 +81,9 @@ The executable helper emits `doctor.json`, `drive.json`, and `published.json`
 into the supplied directory. Each records actions, normalized CLI arguments,
 expected/actual exits, source revision and count/status assertions. `drive`
 also copies exactly the four policy-approved `public_summary` files. A failed
-run writes `status: failed` and exits nonzero; prior proof cannot be overwritten.
+run writes `status: failed` and exits nonzero. SIGINT and SIGTERM write
+`status: interrupted` with the signal name and exit 130 or 143 respectively.
+Receipts survive scratch cleanup; prior proof cannot be overwritten.
 
 Canonical DOM, screenshots, auth traces, worker requests, credentials and raw
 reports remain local and are removed with scratch. Failure diagnostics are
@@ -102,10 +104,15 @@ Fake provider checks in that gate prove adapter contracts, not live model qualit
 
 ## Cleanup
 
-The helper removes only its own temporary directory on success or failure;
+The helper removes only its own temporary directory on success, failure, or cancellation;
 workers own their ephemeral browser/server lifetimes. Proof stays outside that
 directory and is checked after cleanup. An interrupted or timed-out command
-fails the run and the helper kills only that command's isolated process group.
+fails the run. The helper kills only that command's isolated process group and
+reaps its direct child.
+Signal handlers are installed before any child starts, including source-revision
+lookup. The repository gate runs `npm run verification-helper:smoke`, which
+pauses a real Doctor group, signals only the helper with SIGINT or SIGTERM,
+and checks group teardown, removed scratch, and the retained interrupted receipt.
 Source dependencies and `.allie/` outputs from `npm run verify` remain reusable
 in this dedicated worktree. Remove the worktree when finished, preserving the
 committed evidence. Never remove another checkout's `.allie/` or kill by name.

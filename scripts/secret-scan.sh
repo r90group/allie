@@ -124,9 +124,6 @@ def raise_scan_error(error):
 
 def scan_file(path, label=None):
     file_path = Path(path)
-    if file_path.is_symlink() and file_path.is_dir():
-        # Directory aliases store link text; canonical tracked files are scanned separately.
-        return scan_text(label or path, os.readlink(file_path))
     if not file_path.is_file():
         raise OSError("secret scan input is not a readable file")
     findings = []
@@ -154,6 +151,14 @@ def scan_file(path, label=None):
     return findings
 
 
+def scan_worktree_file(path):
+    file_path = Path(path)
+    if file_path.is_symlink() and file_path.is_dir():
+        # Git directory aliases store link text; canonical files are scanned separately.
+        return scan_text(path, os.readlink(file_path))
+    return scan_file(path)
+
+
 def metadata_findings():
     findings = []
     commit = run_git(["log", "-1", "--pretty=%B"]).decode("utf-8", "replace")
@@ -169,7 +174,10 @@ def metadata_findings():
 def scan_repo():
     findings = []
     seen = set()
-    for path in (*worktree_paths(), *generated_evidence_paths()):
+    for path in worktree_paths():
+        seen.add(path)
+        findings.extend(scan_worktree_file(path))
+    for path in generated_evidence_paths():
         if path in seen:
             continue
         seen.add(path)
@@ -193,7 +201,7 @@ def self_test():
         (skill / "SKILL.md").write_text("synthetic=" + token)
         alias = root / "skill-alias"
         alias.symlink_to("canonical-skill", target_is_directory=True)
-        if scan_file(alias):
+        if scan_worktree_file(alias):
             raise SystemExit("secret scan self-test failed: directory alias is not Git link text")
         if len(scan_file(skill / "SKILL.md")) != 1:
             raise SystemExit("secret scan self-test failed: canonical skill secret was missed")
@@ -205,7 +213,7 @@ def self_test():
         secret_dir.mkdir()
         secret_alias = root / "secret-alias"
         secret_alias.symlink_to(token, target_is_directory=True)
-        if len(scan_file(secret_alias)) != 1:
+        if len(scan_worktree_file(secret_alias)) != 1:
             raise SystemExit("secret scan self-test failed: secret in link text was missed")
         artifacts = [
             ".allie/verify/latest/run/artifacts/dom-account.html",
