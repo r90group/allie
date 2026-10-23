@@ -34,6 +34,8 @@ cp -R workers "$BUNDLE/workers"
 cp -R fixtures/login "$BUNDLE/fixtures/login"
 cp package.json "$BUNDLE/package.json"
 cp package-lock.json "$BUNDLE/package-lock.json"
+cp CHANGELOG.md "$BUNDLE/CHANGELOG.md"
+node scripts/prepare-release.mjs --notes > "$BUNDLE/RELEASE_NOTES.md"
 ALLIE_RELEASE_SHA="$(git rev-parse HEAD)" node --input-type=module - "$BUNDLE/release.json" <<'NODE'
 import fs from 'node:fs';
 const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;

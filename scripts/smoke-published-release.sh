@@ -5,7 +5,7 @@ set -euo pipefail
 # The only updater channel is GitHub's latest release; no app update manifest exists.
 tag=${1:?usage: smoke-published-release.sh TAG SHA}
 sha=${2:?usage: smoke-published-release.sh TAG SHA}
-[[ "$tag" =~ ^v0\.[0-9]+\.[0-9]+$ ]]
+[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
 repo=${GITHUB_REPOSITORY:-r90group/allie}
 script_dir=$(cd "$(dirname "$0")" && pwd)
