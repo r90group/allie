@@ -1,0 +1,207 @@
+{
+  "status": "passed",
+  "scanner_sha256": "54c6aeac09966ab389e4905b150fdc22d756455e8e3723556c3c1eff69bea5bc",
+  "results": [
+    {
+      "case": "tracked-relative-skill-directory-alias-clean",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": true
+    },
+    {
+      "case": "tracked-canonical-content-through-directory-alias",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "directory-alias-chain-clean",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": true
+    },
+    {
+      "case": "directory-alias-chain-canonical-secret",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "file-alias-content-when-target-is-ignored",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "unreadable-file-alias-target",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "secret-in-directory-link-text",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "dangling-alias-fails-closed",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "vanished-tracked-canonical-file",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "unreadable-tracked-canonical-file",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "unreadable-tracked-canonical-directory",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "event-valid-json",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": true
+    },
+    {
+      "case": "event-valid-file-alias",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": true
+    },
+    {
+      "case": "event-regular-secret",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "event-file-alias-secret",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "unreadable-event-file",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "vanished-event-file",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "dangling-event-file-alias",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "event-directory-must-be-rejected",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "event-directory-alias-must-be-rejected",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "unreadable-event-directory",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "unreadable-event-directory-alias",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    },
+    {
+      "case": "generated-evidence-secret-crosses-stream-boundary",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "rule_reported": true
+    },
+    {
+      "case": "unreadable-generated-evidence",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "redacted": true,
+      "passed": true,
+      "input_error": true,
+      "reports_clean": false
+    }
+  ]
+}

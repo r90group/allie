@@ -1,0 +1,205 @@
+{
+  "mode": "drive",
+  "status": "passed",
+  "commands": [
+    {
+      "action": "scaffold model-off consumer",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "init",
+        "--manifest",
+        "manifest.yml",
+        "--app-name",
+        "Synthetic verification",
+        "--fixture-dir",
+        "$ALLIE_REPO/fixtures/login"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "consumer preflight",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "doctor",
+        "--manifest",
+        "manifest.yml",
+        "--out",
+        "doctor"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "seed consumer revision",
+      "argv": [
+        "git",
+        "init",
+        "-q"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "seed consumer revision",
+      "argv": [
+        "git",
+        "add",
+        "manifest.yml"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "seed consumer revision",
+      "argv": [
+        "git",
+        "-c",
+        "user.name=Allie Synthetic",
+        "-c",
+        "user.email=allie@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        "synthetic consumer"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "verify consumer",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "verify",
+        "--manifest",
+        "manifest.yml",
+        "--out",
+        "verify",
+        "--project-root",
+        "$RUN"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "read consumer provenance",
+      "argv": [
+        "git",
+        "rev-parse",
+        "--short",
+        "HEAD"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "publish count-only summary",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "publication",
+        "--verify-root",
+        "verify",
+        "--out",
+        "public"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "refuse canonical evidence",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "publication",
+        "--verify-root",
+        "verify",
+        "--out",
+        "refused",
+        "--include",
+        "run/evidence.json"
+      ],
+      "expected_exit": 2,
+      "exit": 2
+    },
+    {
+      "action": "verify authenticated target",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "verify",
+        "--manifest",
+        "$ALLIE_REPO/examples/auth-fixture-flow.yml",
+        "--out",
+        "authenticated",
+        "--project-root",
+        "$RUN"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "verify signed-out target",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "verify",
+        "--manifest",
+        "$ALLIE_REPO/examples/auth-fixture-flow-negative.yml",
+        "--out",
+        "signed-out",
+        "--project-root",
+        "$RUN"
+      ],
+      "expected_exit": 1,
+      "exit": 1
+    },
+    {
+      "action": "missing credential fails closed",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "run",
+        "--manifest",
+        "$ALLIE_REPO/examples/trust-missing-credential.yml",
+        "--out",
+        "missing"
+      ],
+      "expected_exit": 2,
+      "exit": 2
+    }
+  ],
+  "source_sha": "4a64a7c40bfd95b584bd759c41328a0c11cd3525",
+  "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
+  "model": "disabled; provider keys removed from child environment",
+  "doctor": {
+    "agentic worker": "ok",
+    "browser worker": "ok",
+    "model": "warn",
+    "node": "ok",
+    "playwright": "ok",
+    "target": "ok"
+  },
+  "consumer": {
+    "states_captured": 1,
+    "infrastructure_failures": 0,
+    "release_status": "needs_review",
+    "reporters": 6,
+    "mobile_capture": true,
+    "consumer_provenance": "matched"
+  },
+  "publication": {
+    "status": "ready",
+    "files": 4,
+    "raw_refusal_exit": 2,
+    "canonical_unchanged": true
+  },
+  "authenticated": {
+    "release_status": "needs_review",
+    "dashboard_session": true,
+    "auth_lost": false
+  },
+  "signed-out": {
+    "release_status": "blocked",
+    "dashboard_session": false,
+    "auth_lost": true
+  },
+  "missing_credential": "error; exit 2"
+}

@@ -1,0 +1,85 @@
+{
+  "status": "passed",
+  "source_sha": "c5ed11a03ce37b6d2914a9fbc9bef6e6fabfa85d",
+  "source_note": "This code commit is followed only by the evidence update. Fingerprints in the CLI controls identify the scanner and helper bytes tested.",
+  "repository_gate": {
+    "command": "env -u OPENROUTER_API_KEY -u OPENAI_API_KEY TMPDIR=\"$HOME/.cache/tmp\" npm run verify",
+    "exit": 0,
+    "steps": [
+      "cargo fmt --check",
+      "cargo test --locked",
+      "cargo clippy --locked -- -D warnings",
+      "npm run secrets:smoke",
+      "npm run landscape:smoke",
+      "npm run worker:smoke",
+      "npm run evidence:smoke",
+      "npm run axe-rules:smoke",
+      "npm run action:smoke",
+      "npm run auth:smoke",
+      "npm run visibility:smoke",
+      "npm run coverage:smoke",
+      "npm run consumer:smoke",
+      "npm run consumer-cwd:smoke",
+      "npm run distribution:smoke",
+      "npm run verification-helper:smoke",
+      "npm run agentic:smoke",
+      "npm run agentic:precision",
+      "npm run release-integrity:smoke",
+      "npm run release-workflow:smoke",
+      "npm run release:smoke",
+      "npm run autonomous:smoke",
+      "npm run size:smoke"
+    ],
+    "rust_tests_passed": 158,
+    "rust_tests_failed": 0,
+    "scope_note": "The full gate exercised the working tree. Its initial scanner CLI suite had 22 cases; the final 24-case suite adds unreadable directory controls. Final scanner/signal controls and normal helper journeys were rerun at source_sha."
+  },
+  "scanner_controls": {
+    "command": "TMPDIR=\"$HOME/.cache/tmp\" python3 scripts/secret-scan-cli-smoke.py",
+    "exit": 0,
+    "passed": 24,
+    "total": 24,
+    "evidence": "scanner-controls.json"
+  },
+  "signal_controls": {
+    "command": "python3 scripts/verification-helper-signal-smoke.py",
+    "exit": 0,
+    "passed": 2,
+    "total": 2,
+    "evidence": "signal-controls.json",
+    "real_cli": true,
+    "owned_processes_only": true
+  },
+  "normal_source_journeys": {
+    "doctor": {
+      "exit": 0,
+      "commands": 3,
+      "evidence": "doctor.json"
+    },
+    "drive": {
+      "exit": 0,
+      "commands": 13,
+      "evidence": "drive.json"
+    }
+  },
+  "retained_old_head_evidence": {
+    "source_sha": "c70bae73dd5a4fe4f733c61b18c806aee49a41f1",
+    "qa_report": "https://github.com/r90group/allie/pull/99#issuecomment-6305318138",
+    "review_report": "https://github.com/r90group/allie/pull/99#issuecomment-6305265943",
+    "signed_release": "../published.json",
+    "note": "Original journeys, public projection and v0.1.90 exact-signer installation proof remain unchanged. The review also records wrong-signer and tampered-archive rejection. Published mode was not rerun in this delta."
+  },
+  "skill_structure": "Canonical executable helper, relative Claude directory alias, five indexed recipes and relative links verified.",
+  "owner_sign_in": "n/a: local CLI; synthetic target authentication is separate",
+  "paid_model_calls": 0,
+  "production_writes": 0,
+  "final_secret_scan": {
+    "command": "TMPDIR=\"$HOME/.cache/tmp\" npm run secrets:smoke",
+    "exit": 0
+  },
+  "limits": [
+    "Linux /proc required for the signal regression",
+    "CI not polled; parent owns delta QA/review/judge/merge",
+    "Production targets, live paid model review, external SSO/mailbox delivery, expired/reused links and slow-network behavior remain unverified"
+  ]
+}

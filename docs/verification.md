@@ -167,6 +167,17 @@ present. Heavy tooling/browser bundles and binary captures are skipped;
 publication policy rejects binary screenshots and all other canonical evidence
 instead of treating absence of a textual secret match as approval. Findings are
 printed with redacted matches.
+Directory aliases use Git link text only for worktree entries. Canonical skill
+files and file-alias contents remain scanned. Event payloads require a readable
+regular file, including when reached through a file alias. Missing payloads,
+directories, and directory aliases fail closed. The same smoke runs synthetic
+CLI controls against these inputs, including redaction and generated evidence.
+
+`npm run verification-helper:smoke` interrupts real verification-helper Doctor
+runs with SIGINT and SIGTERM. It checks that the active owned process group
+stops, Doctor is reaped, scratch is removed, and `doctor.json` survives with
+`status: interrupted` and the signal name. The regression uses Linux `/proc`
+to observe its own children; it neither mocks the CLI nor signals shared processes.
 
 `npm run landscape:smoke` validates the competitive record shape, review age,
 approved source set, and roadmap linkage that the landscape document claims are

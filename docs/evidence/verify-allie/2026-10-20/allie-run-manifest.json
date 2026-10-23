@@ -1,0 +1,12 @@
+{
+  "schema": "allie.run-manifest.v0",
+  "command": "publication",
+  "publication_class": "public_summary",
+  "phase": "complete",
+  "written_at": "2026-10-21T00:41:46.311640528+00:00",
+  "files": [
+    "allie-public-summary.json",
+    "allie-public-summary.md",
+    "publication-receipt.json"
+  ]
+}

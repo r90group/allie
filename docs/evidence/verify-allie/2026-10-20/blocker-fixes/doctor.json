@@ -1,0 +1,57 @@
+{
+  "mode": "doctor",
+  "status": "passed",
+  "commands": [
+    {
+      "action": "read source revision",
+      "argv": [
+        "git",
+        "-C",
+        "$ALLIE_REPO",
+        "rev-parse",
+        "HEAD"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "scaffold model-off consumer",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "init",
+        "--manifest",
+        "manifest.yml",
+        "--app-name",
+        "Synthetic verification",
+        "--fixture-dir",
+        "$ALLIE_REPO/fixtures/login"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    },
+    {
+      "action": "consumer preflight",
+      "argv": [
+        "$ALLIE_REPO/target/debug/allie",
+        "doctor",
+        "--manifest",
+        "manifest.yml",
+        "--out",
+        "doctor"
+      ],
+      "expected_exit": 0,
+      "exit": 0
+    }
+  ],
+  "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
+  "model": "disabled; provider keys removed from child environment",
+  "source_sha": "c5ed11a03ce37b6d2914a9fbc9bef6e6fabfa85d",
+  "doctor": {
+    "agentic worker": "ok",
+    "browser worker": "ok",
+    "model": "warn",
+    "node": "ok",
+    "playwright": "ok",
+    "target": "ok"
+  }
+}
