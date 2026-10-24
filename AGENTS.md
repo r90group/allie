@@ -48,8 +48,12 @@ The browser worker smoke, V0 evidence smoke, consumer contract smoke, release pr
 `master` protection applies to admins but configures no required status checks or
 approving reviews; repository auto-merge is disabled. Wait for the current head's
 `ci` checks (`verify`, `supply-chain-audit`, and PR-only `release-preflight`) to
-pass, then merge with `gh pr merge <pr> --squash --match-head-commit <sha>`.
-Never use `--admin`; inspect failed checks, a changed head, or merge conflicts.
+pass, then merge only through the crew gate `safe-merge`
+(`bin/safe-merge <owner/repo> <pr>` from misty-ops). It requires a fresh independent
+reviewer verdict comment with an exact `VERDICT:` line at the head SHA, green CI and a
+clean merge state, and it performs the squash merge pinned with `--match-head-commit`.
+Never run `gh pr merge` directly and never use `--admin`; inspect failed checks, a
+changed head, or merge conflicts.
 
 ## Continuous release
 
