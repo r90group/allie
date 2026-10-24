@@ -1,0 +1,118 @@
+{
+  "status": "passed",
+  "helper_sha256": "ddf8fa5971882f4b4d87c24ee36fe3a7a97227bfee6f901a323c26019710fdd5",
+  "results": [
+    {
+      "signal": "SIGTERM",
+      "helper_exit": 143,
+      "expected_exit": 143,
+      "owned_group_stopped": true,
+      "doctor_reaped": true,
+      "scratch_removed": true,
+      "proof_retained": true,
+      "receipt_status": "interrupted",
+      "receipt_signal": "SIGTERM",
+      "passed": true
+    },
+    {
+      "signal": "SIGINT",
+      "helper_exit": 130,
+      "expected_exit": 130,
+      "owned_group_stopped": true,
+      "doctor_reaped": true,
+      "scratch_removed": true,
+      "proof_retained": true,
+      "receipt_status": "interrupted",
+      "receipt_signal": "SIGINT",
+      "passed": true
+    }
+  ],
+  "receipts": {
+    "SIGTERM": {
+      "mode": "doctor",
+      "status": "interrupted",
+      "commands": [
+        {
+          "action": "read source revision",
+          "argv": [
+            "git",
+            "-C",
+            "$ALLIE_REPO",
+            "rev-parse",
+            "HEAD"
+          ],
+          "expected_exit": 0,
+          "exit": 0
+        },
+        {
+          "action": "scaffold model-off consumer",
+          "argv": [
+            "$ALLIE_REPO/target/debug/allie",
+            "init",
+            "--manifest",
+            "manifest.yml",
+            "--app-name",
+            "Synthetic verification",
+            "--fixture-dir",
+            "$ALLIE_REPO/fixtures/login"
+          ],
+          "expected_exit": 0,
+          "exit": 0
+        },
+        {
+          "action": "consumer preflight",
+          "status": "interrupted",
+          "exit": -9,
+          "child_reaped": true
+        }
+      ],
+      "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
+      "model": "disabled; provider keys removed from child environment",
+      "source_sha": "c5ed11a03ce37b6d2914a9fbc9bef6e6fabfa85d",
+      "signal": "SIGTERM"
+    },
+    "SIGINT": {
+      "mode": "doctor",
+      "status": "interrupted",
+      "commands": [
+        {
+          "action": "read source revision",
+          "argv": [
+            "git",
+            "-C",
+            "$ALLIE_REPO",
+            "rev-parse",
+            "HEAD"
+          ],
+          "expected_exit": 0,
+          "exit": 0
+        },
+        {
+          "action": "scaffold model-off consumer",
+          "argv": [
+            "$ALLIE_REPO/target/debug/allie",
+            "init",
+            "--manifest",
+            "manifest.yml",
+            "--app-name",
+            "Synthetic verification",
+            "--fixture-dir",
+            "$ALLIE_REPO/fixtures/login"
+          ],
+          "expected_exit": 0,
+          "exit": 0
+        },
+        {
+          "action": "consumer preflight",
+          "status": "interrupted",
+          "exit": -9,
+          "child_reaped": true
+        }
+      ],
+      "owner_sign_in": "n/a: local CLI; no hosted Allie identity",
+      "model": "disabled; provider keys removed from child environment",
+      "source_sha": "c5ed11a03ce37b6d2914a9fbc9bef6e6fabfa85d",
+      "signal": "SIGINT"
+    }
+  }
+}

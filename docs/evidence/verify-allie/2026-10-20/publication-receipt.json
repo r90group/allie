@@ -1,0 +1,19 @@
+{
+  "schema": "allie.publication.v0",
+  "publication_class": "public_summary",
+  "status": "ready",
+  "retryable": false,
+  "published": [
+    {
+      "path": "allie-public-summary.json",
+      "publication_class": "public_summary",
+      "sha256": "sha256:a50856ad63940902adeccffe9d94140ef14b06cafd5bb7580f83e3078b8cfd67"
+    },
+    {
+      "path": "allie-public-summary.md",
+      "publication_class": "public_summary",
+      "sha256": "sha256:5477bc2135b892cdf63f87d0a7a83048a2ddfd0a13d1ad1aa185ea46c0eeedc4"
+    }
+  ],
+  "refused": []
+}

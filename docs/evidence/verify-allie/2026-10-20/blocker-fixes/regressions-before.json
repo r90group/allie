@@ -1,0 +1,56 @@
+{
+  "source_sha": "c70bae73dd5a4fe4f733c61b18c806aee49a41f1",
+  "scanner_command": "TMPDIR=\"$HOME/.cache/tmp\" python3 scripts/secret-scan-cli-smoke.py --scanner <old-head-scanner>",
+  "scanner_sha256": "e3d16abf879c6126bdd53b8c054910b197e7f8feee068c7812d767e803e63156",
+  "scanner_controls_passed": 22,
+  "scanner_controls_total": 24,
+  "scanner_failures": [
+    {
+      "case": "event-directory-alias-must-be-rejected",
+      "expected_exit": 1,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": false,
+      "input_error": false,
+      "reports_clean": true
+    },
+    {
+      "case": "unreadable-event-directory-alias",
+      "expected_exit": 1,
+      "actual_exit": 0,
+      "redacted": true,
+      "passed": false,
+      "input_error": false,
+      "reports_clean": true
+    }
+  ],
+  "signal_command": "python3 scripts/verification-helper-signal-smoke.py",
+  "helper_sha256": "d293dd612bc67de884dc43cc6f6c091229e36de60e9462e0f3e49867496eae74",
+  "signal_results": [
+    {
+      "signal": "SIGTERM",
+      "helper_exit": -15,
+      "expected_exit": 143,
+      "owned_group_stopped": false,
+      "doctor_reaped": false,
+      "scratch_removed": false,
+      "proof_retained": false,
+      "receipt_status": null,
+      "receipt_signal": null,
+      "passed": false
+    },
+    {
+      "signal": "SIGINT",
+      "helper_exit": -2,
+      "expected_exit": 130,
+      "owned_group_stopped": true,
+      "doctor_reaped": true,
+      "scratch_removed": true,
+      "proof_retained": true,
+      "receipt_status": "in_progress",
+      "receipt_signal": null,
+      "passed": false
+    }
+  ],
+  "cleanup": "The regression harness killed only its surviving owned group and removed only its own scratch after recording each failure."
+}

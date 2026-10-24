@@ -16,6 +16,7 @@ npm run coverage:smoke
 npm run consumer:smoke
 npm run consumer-cwd:smoke
 npm run distribution:smoke
+npm run verification-helper:smoke
 npm run agentic:smoke
 npm run agentic:precision
 npm run release-integrity:smoke
