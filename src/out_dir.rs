@@ -17,8 +17,8 @@
 //! files the run left behind. A rerun into a manifested directory removes
 //! everything in it — manifested files, stragglers dropped in afterwards,
 //! and partial output stranded by a crash between prepare and finalize —
-//! then re-claims it, so the directory always describes exactly one run and
-//! a crashed run never wedges the directory into a refuse-forever state.
+//! preserving the validated root manifest until its atomic replacement.
+//! Failed or interrupted cleanup therefore retains ownership for a retry.
 //! Anything a user drops into a managed out-dir is therefore absorbed and
 //! removed on the next rerun: managed out-dirs belong to allie, not scratch
 //! space.
@@ -44,6 +44,9 @@ use crate::{AllieError, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Component, Path};
+
+mod cleanup;
+use cleanup::clean_dir_contents;
 
 const MANIFEST_FILE_NAME: &str = "allie-run-manifest.json";
 const MANIFEST_SCHEMA: &str = "allie.run-manifest.v0";
@@ -79,7 +82,7 @@ fn default_phase() -> String {
 /// - Missing directory: created, claimed.
 /// - Empty directory: claimed.
 /// - Directory holding a valid manifest for the same `command` (any phase):
-///   all contents removed, then re-claimed.
+///   stale contents removed, preserving ownership until atomically re-claimed.
 /// - Non-empty directory with no manifest, or with a manifest that fails
 ///   validation (unknown schema, other command, escaping entries): refused
 ///   with nothing deleted.
@@ -87,9 +90,27 @@ pub(crate) fn prepare_out_dir(out_dir: &Path, command: &str) -> Result<()> {
     create_dir_all(out_dir)?;
 
     let manifest_path = out_dir.join(MANIFEST_FILE_NAME);
-    if manifest_path.exists() {
+    let metadata = match fs::symlink_metadata(&manifest_path) {
+        Ok(metadata) => Some(metadata),
+        Err(source) if source.kind() == std::io::ErrorKind::NotFound => None,
+        Err(source) => {
+            return Err(AllieError::Io {
+                context: format!("inspect run manifest {}", manifest_path.display()),
+                source,
+            });
+        }
+    };
+    if let Some(metadata) = metadata {
+        if !metadata.file_type().is_file() {
+            return Err(AllieError::InvalidManifest(format!(
+                "{} must be a regular file, not a symlink or directory; refusing to clean — choose a new --out directory",
+                manifest_path.display()
+            )));
+        }
         let manifest: RunManifest = crate::read_json_file(&manifest_path)?;
         validate_manifest(out_dir, command, &manifest)?;
+        // Keep validated ownership through every deletion and a failed re-claim.
+        // The atomic write below replaces it only after cleanup succeeds.
         clean_dir_contents(out_dir)?;
     } else if !dir_is_empty(out_dir)? {
         return Err(AllieError::InvalidManifest(format!(
@@ -182,41 +203,6 @@ fn dir_is_empty(dir: &Path) -> Result<bool> {
     Ok(entries.next().is_none())
 }
 
-/// Remove everything inside `dir` (not `dir` itself). File types come from
-/// `DirEntry::file_type`, which does not traverse symlinks: a symlink is
-/// removed as a leaf via `remove_file`, never recursed into, so nothing
-/// outside the walk root can be touched.
-fn clean_dir_contents(dir: &Path) -> Result<()> {
-    let entries = fs::read_dir(dir).map_err(|source| AllieError::Io {
-        context: format!("read directory {}", dir.display()),
-        source,
-    })?;
-    for entry in entries {
-        let entry = entry.map_err(|source| AllieError::Io {
-            context: format!("read directory entry under {}", dir.display()),
-            source,
-        })?;
-        let path = entry.path();
-        let file_type = entry.file_type().map_err(|source| AllieError::Io {
-            context: format!("read file type of {}", path.display()),
-            source,
-        })?;
-        if file_type.is_dir() {
-            clean_dir_contents(&path)?;
-            fs::remove_dir(&path).map_err(|source| AllieError::Io {
-                context: format!("remove stale directory {}", path.display()),
-                source,
-            })?;
-        } else {
-            fs::remove_file(&path).map_err(|source| AllieError::Io {
-                context: format!("remove stale file {}", path.display()),
-                source,
-            })?;
-        }
-    }
-    Ok(())
-}
-
 fn collect_files(
     root: &Path,
     dir: &Path,
@@ -248,3 +234,6 @@ fn collect_files(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod recovery_tests;
