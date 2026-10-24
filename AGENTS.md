@@ -52,8 +52,11 @@ pass, then merge only through the crew gate `safe-merge`
 (`bin/safe-merge <owner/repo> <pr>` from misty-ops). It requires a fresh independent
 reviewer verdict comment with an exact `VERDICT:` line at the head SHA, green CI and a
 clean merge state, and it performs the squash merge pinned with `--match-head-commit`.
-Never run `gh pr merge` directly and never use `--admin`; inspect failed checks, a
-changed head, or merge conflicts.
+`master` also requires the GitHub merge queue (repository ruleset, no bypass
+actors): `safe-merge` enqueues the PR, waits for the `merge_group` run of `ci`
+(the same three checks, including `release-preflight`) and reports the squash
+commit once the queue lands it. Never run `gh pr merge` directly and never use
+`--admin`; inspect failed checks, a changed head, or merge conflicts.
 
 ## Continuous release
 
