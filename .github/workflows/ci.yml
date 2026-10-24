@@ -2,7 +2,11 @@ name: ci
 
 on:
   pull_request:
+  merge_group:
+    types: [checks_requested]
   push:
+    branches-ignore:
+      - "gh-readonly-queue/**"
 
 jobs:
   verify:
@@ -19,7 +23,7 @@ jobs:
       - run: npm run verify
 
   release-preflight:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
