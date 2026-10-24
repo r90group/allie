@@ -68,6 +68,12 @@ authoritative and merge with routes found from live links. When a live route or
 sitemap cannot be fetched, Allie keeps manifest-declared states and records the
 miss in discovery diagnostics instead of silently implying complete coverage.
 
+Directory paths retain their trailing slash when fetched, resolved, and emitted
+in generated flows. Generated routes whose short state IDs collide receive
+deterministic route-derived suffixes so their evidence artifacts stay separate.
+Unique IDs and explicit manifest IDs are preserved; distinct manifest routes
+with the same explicit ID are rejected before discovery or map artifacts are written.
+
 `allie verify` is the primary operator command for consuming apps. It composes
 the existing discovery, generated-flow, product-map, evidence-run, WCAG report,
 and release-projection primitives, then writes stable reporter files:

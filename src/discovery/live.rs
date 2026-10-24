@@ -396,6 +396,9 @@ fn join_relative_live_route(current_route: &str, href: &str) -> String {
 fn normalize_live_route(value: &str) -> String {
     let without_fragment = value.split('#').next().unwrap_or("/");
     let without_query = without_fragment.split('?').next().unwrap_or("/");
+    let directory = without_query.ends_with('/')
+        || without_query.ends_with("/.")
+        || without_query.ends_with("/..");
     let mut segments = Vec::new();
     for segment in without_query.split('/') {
         match segment {
@@ -409,6 +412,13 @@ fn normalize_live_route(value: &str) -> String {
     if segments.is_empty() {
         "/".to_string()
     } else {
-        format!("/{}", segments.join("/"))
+        format!(
+            "/{}{}",
+            segments.join("/"),
+            if directory { "/" } else { "" }
+        )
     }
 }
+
+#[cfg(test)]
+mod tests;
