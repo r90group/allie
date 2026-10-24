@@ -3,7 +3,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import TOML from '@iarna/toml';
-import { isDeepStrictEqual } from 'node:util';
 import { parseDocument, stringify as stringifyYaml } from 'yaml';
 
 const AUDIT_PATH = '.cargo/audit.toml';
@@ -44,8 +43,8 @@ function validateReleaseWorkflow(text) {
   if (JSON.stringify(trigger.workflows) !== '["ci"]' || JSON.stringify(trigger.types) !== '["completed"]' ||
       JSON.stringify(trigger.branches) !== '["master"]') fail('Release must follow completed master CI');
   const jobs = workflow.jobs;
-  exactKeys(jobs, ['build-release', 'sign-and-publish', 'smoke-published', 'release-channel', 'retract-failed'], 'release jobs');
-  for (const name of ['build-release', 'smoke-published']) {
+  exactKeys(jobs, ['select-release', 'build-release', 'sign-and-publish', 'smoke-published', 'release-channel', 'retract-failed'], 'release jobs');
+  for (const name of ['select-release', 'build-release', 'smoke-published']) {
     exactKeys(jobs[name].permissions, ['contents'], `${name} permissions`);
     if (jobs[name].permissions.contents !== 'read') fail(`${name} must be read-only`);
   }
@@ -53,22 +52,24 @@ function validateReleaseWorkflow(text) {
     exactKeys(jobs[name].permissions, ['contents'], `${name} permissions`);
     if (jobs[name].permissions.contents !== 'write') fail(`${name} may only mutate release state`);
   }
-  exactKeys(jobs['sign-and-publish'].permissions, ['contents', 'id-token'], 'signing permissions');
+  exactKeys(jobs['sign-and-publish'].permissions, ['contents', 'id-token', 'pull-requests'], 'signing permissions');
   if (jobs['sign-and-publish'].permissions.contents !== 'write' ||
-      jobs['sign-and-publish'].permissions['id-token'] !== 'write') fail('Only isolated signing gets OIDC');
+      jobs['sign-and-publish'].permissions['id-token'] !== 'write' ||
+      jobs['sign-and-publish'].permissions['pull-requests'] !== 'write') fail('Only isolated signing gets OIDC and completes the release PR');
   const build = jobs['build-release'];
   const signer = jobs['sign-and-publish'];
   const smoke = jobs['smoke-published'];
   const channel = jobs['release-channel'];
   const retract = jobs['retract-failed'];
   const trustedPush = "github.event.workflow_run.event=='push'&&github.event.workflow_run.conclusion=='success'&&github.event.workflow_run.head_branch=='master'&&github.event.workflow_run.head_repository.full_name==github.repository";
-  if (expression(build.if) !== trustedPush) fail('Build must exclude unsuccessful, PR and foreign-repository CI');
+  if (expression(jobs['select-release'].if) !== trustedPush || build.needs !== 'select-release' ||
+      expression(build.if) !== "needs.select-release.outputs.publish=='true'") fail('Build must follow trusted CI and a selected release');
   if (build['runs-on'] !== 'ubuntu-22.04') fail('Build must preserve the glibc 2.35 compatibility floor');
   if (signer.needs !== 'build-release' || JSON.stringify(smoke.needs) !== '["build-release","sign-and-publish"]') {
     fail('Signing and downloaded smoke must follow the candidate build');
   }
   if (expression(channel.if) !== "needs.smoke-published.result=='success'" ||
-      expression(retract.if) !== "!cancelled()&&needs.sign-and-publish.result=='success'&&needs.smoke-published.result!='success'") {
+      expression(retract.if) !== "!cancelled()&&needs.sign-and-publish.outputs.release_id!=''&&needs.smoke-published.result!='success'") {
     fail('Healthy promotion and failed-candidate quarantine must be mutually exclusive');
   }
   if (!channel.concurrency?.group || channel.concurrency['cancel-in-progress'] !== false || retract.concurrency) {
@@ -120,10 +121,16 @@ function validateReleaseWorkflow(text) {
       !run.includes('--repo "$GITHUB_REPOSITORY"') || run.includes('--clobber') || run.includes('dist/*')) {
     fail('Publication may upload exactly the three expected assets without clobbering');
   }
-  if (!run.includes('-F generate_release_notes=true') || !run.includes('-f target_commitish="$RELEASE_SHA"') ||
+  if (!run.includes('-F body=@dist/RELEASE_NOTES.md') || run.includes('generate_release_notes') || !run.includes('-f target_commitish="$RELEASE_SHA"') ||
       !run.includes('-f make_latest=false') || !run.includes('trap cleanup EXIT') ||
       !run.includes('gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$release_id"')) {
     fail('Publication must bind the revision, keep healthy latest, and remove failed drafts');
+  }
+  if (run.indexOf('gh pr edit "$release_pr"') < publishAt ||
+      !run.includes('.merge_commit_sha == env.RELEASE_SHA') ||
+      !run.includes('.head.ref == "release-please--branches--master"') ||
+      !run.includes("--remove-label 'autorelease: pending'")) {
+    fail('Only successful exact-source publication may complete release-please label custody');
   }
 }
 
@@ -245,6 +252,12 @@ const waiverText = fs.readFileSync(WAIVER_PATH, 'utf8');
 validateAuditPolicy(auditText, waiverText);
 const releaseText = fs.readFileSync(RELEASE_PATH, 'utf8');
 validateReleaseWorkflow(releaseText);
+const trusted = new Function('github', `return (${expression(parseYaml(releaseText).jobs['select-release'].if)});`);
+for (const conclusion of ['failure', 'skipped', 'cancelled', null]) {
+  if (trusted({ event: { workflow_run: { event: 'push', conclusion, head_branch: 'master', head_repository: { full_name: 'r90group/allie' } } }, repository: 'r90group/allie' })) {
+    fail(`Unsuccessful CI selected a release: ${conclusion}`);
+  }
+}
 validateCiWorkflow(fs.readFileSync(CI_PATH, 'utf8'));
 exerciseInstallBoundary(fs.readFileSync('README.md', 'utf8'));
 const unsafeBuild = parseYaml(releaseText);
@@ -256,72 +269,98 @@ expectRejected(() => validateReleaseWorkflow(stringifyYaml(unsafeSigner)), 'sign
 const unsafeQuarantine = parseYaml(releaseText);
 unsafeQuarantine.jobs['retract-failed'].concurrency = { group: 'allie-release-channel' };
 expectRejected(() => validateReleaseWorkflow(stringifyYaml(unsafeQuarantine)), 'failed-candidate quarantine can be coalesced');
+const quarantine = new Function('needs', 'cancelled', `return (${expression(parseYaml(releaseText).jobs['retract-failed'].if)
+  .replaceAll('needs.sign-and-publish', 'needs["sign-and-publish"]')
+  .replaceAll('needs.smoke-published', 'needs["smoke-published"]')});`);
+for (const [releaseId, smoke, expected] of [['123', 'skipped', true], ['123', 'failure', true], ['', 'skipped', false], ['123', 'success', false]]) {
+  if (quarantine({ 'sign-and-publish': { result: 'failure', outputs: { release_id: releaseId } },
+    'smoke-published': { result: smoke } }, () => false) !== expected) fail('Post-publication signer failure escaped quarantine');
+}
 
 
-// Exercise the version preparer as a consumer: real Git history, all four
-// manifests/locks, and rejection before any file changes on invalid inputs.
+// Validate generator output without another version authority or file mutation.
 const preparer = path.resolve('scripts/prepare-release.mjs');
 const sourceCheck = spawnSync(process.execPath, [preparer, '--check'], { encoding: 'utf8' });
 if (sourceCheck.status !== 0) fail(`Real source versions are invalid: ${sourceCheck.stderr}`);
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'allie-release-version-'));
-const inputs = Object.fromEntries(['Cargo.toml', 'Cargo.lock', 'package.json', 'package-lock.json']
-  .map((file) => [file, fs.readFileSync(file, 'utf8')]));
-const sourceCargo = TOML.parse(inputs['Cargo.toml']);
-const sourceLock = TOML.parse(inputs['Cargo.lock']);
-const sourceWorker = JSON.parse(inputs['package.json']);
-const sourceWorkerLock = JSON.parse(inputs['package-lock.json']);
-const expectedVersion = `0.${sourceCargo.package.version.split('.')[1]}.2`;
+const actualVersion = TOML.parse(fs.readFileSync('Cargo.toml', 'utf8')).package.version;
+const inputs = Object.fromEntries(['Cargo.toml', 'Cargo.lock', 'package.json', 'package-lock.json',
+  '.release-please-manifest.json', 'release-please-config.json', 'CHANGELOG.md']
+  .map((file) => [file, fs.readFileSync(file, 'utf8').replaceAll(actualVersion, '0.1.85')]));
+const sourceVersion = TOML.parse(inputs['Cargo.toml']).package.version;
 const git = (...args) => {
   const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
   if (result.status !== 0) fail(result.stderr);
+  return result.stdout.trim();
 };
 const restore = () => {
   for (const [file, contents] of Object.entries(inputs)) fs.writeFileSync(path.join(root, file), contents);
 };
-const prepare = (cwd = root) => spawnSync(process.execPath, [preparer], { cwd, encoding: 'utf8' });
-const rejectWithoutMutation = (label) => {
-  const before = Object.keys(inputs).map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
+const prepare = (mode = '--select', cwd = root) => spawnSync(process.execPath, [preparer, mode], { cwd, encoding: 'utf8' });
+const expectSelection = (publish) => {
   const result = prepare();
+  if (result.status !== 0 || !result.stdout.includes(`publish=${publish}`)) fail(`selection failed: ${result.stderr}`);
+};
+const rejectWithoutMutation = (label, mode = '--select') => {
+  const before = Object.keys(inputs).map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
+  const result = prepare(mode);
   if (result.status === 0) fail(`${label} was accepted`);
   const after = Object.keys(inputs).map((file) => fs.readFileSync(path.join(root, file), 'utf8'));
   if (JSON.stringify(before) !== JSON.stringify(after)) fail(`${label} partially mutated release inputs`);
 };
+const commit = (title) => {
+  git('add', '.');
+  git('-c', 'user.name=Allie Release Smoke', '-c', 'user.email=allie@example.invalid',
+    'commit', '-q', '--allow-empty', '-m', title);
+};
+const version = (value) => {
+  restore();
+  for (const [file, contents] of Object.entries(inputs)) {
+    fs.writeFileSync(path.join(root, file), contents.replaceAll(sourceVersion, value));
+  }
+};
 try {
   restore();
   git('init', '-q');
-  git('add', '.');
-  for (let i = 0; i < 2; i++) {
-    git('-c', 'user.name=Allie Release Smoke', '-c', 'user.email=allie@example.invalid',
-      'commit', '-q', '--allow-empty', '-m', `release fixture ${i}`);
-  }
-  const result = prepare();
-  if (result.status !== 0 || result.stdout.trim() !== `v${expectedVersion}`) fail(`version preparation failed: ${result.stderr}`);
-  const cargo = TOML.parse(fs.readFileSync(path.join(root, 'Cargo.toml'), 'utf8'));
-  const lock = TOML.parse(fs.readFileSync(path.join(root, 'Cargo.lock'), 'utf8'));
-  const worker = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  const workerLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
-  const versions = [cargo.package.version, lock.package.find((entry) => entry.name === 'allie').version,
-    worker.version, workerLock.version, workerLock.packages[''].version];
-  if (versions.some((version) => version !== expectedVersion)) fail(`release version disagreement: ${versions}`);
-  const dependencies = (cargo, lock, worker, workerLock) => [
-    cargo.dependencies, lock.package.filter((entry) => entry.name !== 'allie'),
-    worker.dependencies, worker.devDependencies,
-    Object.fromEntries(Object.entries(workerLock.packages).filter(([name]) => name !== '')),
-  ];
-  if (!isDeepStrictEqual(dependencies(cargo, lock, worker, workerLock),
-      dependencies(sourceCargo, sourceLock, sourceWorker, sourceWorkerLock))) {
-    fail('version preparation changed an actual dependency or lock pin');
-  }
+  commit('chore: baseline');
+  rejectWithoutMutation('missing immutable baseline');
+  const baseline = git('rev-parse', 'HEAD');
+  commit('docs: a non-release change');
+  expectSelection(false);
+  version('0.1.86');
+  commit('chore(master): release 0.1.86 (#123)');
+  expectSelection(true);
+  expectSelection(true); // Pure validation is idempotent and writes no version files.
+  const notes = prepare('--notes');
+  if (notes.status !== 0 || !notes.stdout.startsWith('## [0.1.86]') || notes.stdout.includes('# Changelog')) fail('canonical notes projection failed');
+  git('tag', 'v0.1.86');
+  expectSelection(false);
+  git('tag', '-d', 'v0.1.86');
+  git('tag', 'v0.1.86', baseline);
+  rejectWithoutMutation('conflicting tag');
+  git('tag', '-d', 'v0.1.86');
+  git('reset', '--hard', baseline);
+  version('1.0.0');
+  commit('chore(master): release 1.0.0');
+  expectSelection(true);
+  git('reset', '--hard', baseline);
+  version('0.1.84');
+  commit('chore(master): release 0.1.84');
+  rejectWithoutMutation('decreasing version');
+  git('reset', '--hard', baseline);
+  version('0.1.86');
+  commit('fix: pretend this is a release');
+  rejectWithoutMutation('false release title');
   restore();
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '1.0.0' }));
   rejectWithoutMutation('mismatched worker version');
   restore();
-  fs.writeFileSync(path.join(root, 'Cargo.toml'), '[package]\nname = "allie"\nversion = "1.0.0"\n');
-  rejectWithoutMutation('stable source release line');
+  fs.writeFileSync(path.join(root, 'CHANGELOG.md'), '# Changelog\n\n## 0.0.1\nStale notes\n');
+  rejectWithoutMutation('stale notes', '--check');
   restore();
   const shallow = path.join(root, 'shallow');
   git('clone', '--quiet', '--depth', '1', `file://${root}`, shallow);
-  const shallowResult = prepare(shallow);
+  const shallowResult = prepare('--select', shallow);
   if (shallowResult.status === 0 || !shallowResult.stderr.includes('shallow checkout')) fail('shallow history was accepted');
 } finally {
   fs.rmSync(root, { recursive: true, force: true });
@@ -352,4 +391,4 @@ expectRejected(
   'undocumented ignored advisory',
 );
 
-console.log('release policy smoke passed: coherent monotonic artifact versions and fail-closed audit waivers');
+console.log('release policy smoke passed: coherent SemVer/notes, no-op/repeat/conflict/decrease/stale refusal and fail-closed custody');

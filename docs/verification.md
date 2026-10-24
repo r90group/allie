@@ -23,18 +23,22 @@ explicit override for nonstandard layouts, not part of the normal consumer path.
 
 ## Release and recovery
 
-Every successful `ci` push run on `master` automatically publishes its exact
-revision as the signed Linux x64 bundle. The four source manifests/lockfiles agree
-on the pre-stable release line `0.<minor>.0`, validated by the PR gate.
+Green `ci` pushes on `master` prepare release-please PRs. Only a merged generated
+version commit publishes a new signed Linux x64 bundle; ordinary non-release
+commits and existing identical tags do not republish. The four source manifests,
+lockfiles, release manifest and canonical changelog entry must agree.
 The PR-only, read-only `release-preflight` job and trusted release build both run
 `scripts/build-release.sh dist` on Ubuntu 22.04 with full Git history. This shared
-entrypoint prepares the revision-derived version, builds the optimized production
+entrypoint validates the generated version, builds the optimized production
 archive, generates and checks its checksum, runs native `init` on Debian 12, then
 drives the unpacked artifact through the committed consumer journey below.
-Preparation changes only the disposable checkout's manifests; PRs neither sign
+Validation never rewrites manifests; PRs neither sign
 nor publish, receive no OIDC/private credentials, and never advance `latest`.
-The workflow creates its own tag after green master CI. There is no manual tag,
-version-bump PR, or per-release approval in the routine path.
+The existing artifact workflow creates its own tag after green master CI.
+Release-please never creates a tag or GitHub Release. The merging agent approves
+only native CI runs attached to the same-repository release PR's current head,
+reads successful exact-head CI and generated notes, and merges without a second
+notes review or an admin bypass. Local decisions are in [ADR 001](adr/001-release-metadata.md).
 
 The three downloaded assets are checked by the read-only `smoke-published` job:
 checksum, exact workflow signer, signed `release.json` version/SHA, and the real

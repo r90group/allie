@@ -1,0 +1,20 @@
+name: Conventional title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate the published commit title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          [[ "$PR_TITLE" =~ ^(feat|fix|chore|docs|test|build|ci|refactor|style|perf|revert)(\([^\)]+\))?\!?:\ .+ ]] || {
+            printf '%s\n' 'Use a Conventional Commit title; it becomes public release notes.' >&2
+            exit 1
+          }
