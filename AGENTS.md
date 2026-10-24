@@ -61,4 +61,3 @@ lockfiles; CI owns the revision-derived patch. Preserve split build/signing
 privileges, exact Sigstore verification, and private canonical evidence.
 Use [docs/verification.md](docs/verification.md#release-and-recovery) for deployed
 artifact smoke, rollback, and the no-mutation agent alert delivery probe.
-Run `upkeep where <task-kind>` before dispatching.
