@@ -49,7 +49,7 @@ The browser worker smoke, V0 evidence smoke, consumer contract smoke, release pr
 approving reviews; repository auto-merge is disabled. Wait for the current head's
 `ci` checks (`verify`, `supply-chain-audit`, and PR-only `release-preflight`) to
 pass, then merge only through the crew gate `safe-merge`
-(`bin/safe-merge <owner/repo> <pr>` from misty-ops). It requires a fresh independent
+(`safe-merge <owner/repo> <pr>` on the box; source: Daybook `misty-step/ops/bin/safe-merge`). It requires a fresh independent
 reviewer verdict comment with an exact `VERDICT:` line at the head SHA, green CI and a
 clean merge state, and it performs the squash merge pinned with `--match-head-commit`.
 `master` also requires the GitHub merge queue (repository ruleset, no bypass
